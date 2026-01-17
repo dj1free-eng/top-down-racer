@@ -45,13 +45,19 @@ this.finishSensor.body.setAllowGravity(false);
 this.finishSensor.body.setImmovable(true);
     
     // Coche
-    this.car = this.physics.add.sprite(320, this.worldH/2, 'car');
-    this.car.setDamping(false);
-    this.car.setDrag(0,0);
-    this.car.setMaxVelocity(9999);
-    this.car.setCollideWorldBounds(true);
-    this.car.setBounce(0.2);
-    this.car.rotation = 0;
+    // Coche — posición de salida (antes de meta, mirando hacia ARRIBA)
+const startX = trackCenterX;
+const startY = this.worldH/2 + 120; // un poco antes de la meta
+
+this.car = this.physics.add.sprite(startX, startY, 'car');
+this.car.setDamping(false);
+this.car.setDrag(0,0);
+this.car.setMaxVelocity(9999);
+this.car.setCollideWorldBounds(true);
+this.car.setBounce(0.2);
+
+// Mirando hacia arriba (−90°)
+this.car.rotation = -Math.PI / 2;
 
     // Colisiones
     this.physics.add.collider(this.car, this.walls);
@@ -82,6 +88,7 @@ this.checkpointSensor.body.setImmovable(true);
 // Overlap checkpoint: OK solo si se pasa en sentido correcto.
 // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
 this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
+ if (!this.raceStarted) return;
   const vy = this.car.body.velocity.y;
   if (vy < 60) return;
 
@@ -99,20 +106,39 @@ this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
   this._checkpointOK = true;
 });
 // Overlap meta
-this.lap = 1;
+this.lap = 0;              // aún no estamos en vuelta
 this.lapsTotal = 4;
 this._canCountLap = true;
 
 // Checkpoint: debe pasar por aquí antes de contar vuelta en meta
 this._checkpointOK = false;
     // Timer
-    this.startTime = this.time.now;
+    this.startTime = null;      // todavía NO empieza
+this.raceStarted = false;  // aún no se ha cruzado la meta
 this.raceFinished = false;
 this.finalTimeMs = 0;
     // Splits / sectores
 this.lapStartTime = this.startTime;      // inicio de la vuelta actual
 this.lastCheckpointTime = null;          // tiempo absoluto del último checkpoint
 this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
+
+// ===== ARRANQUE DE CARRERA =====
+if (!this.raceStarted) {
+  const vy = this.car.body.velocity.y;
+
+  // Solo arranca si cruza en sentido correcto (hacia arriba)
+  if (vy < -60) {
+    this.raceStarted = true;
+    this.lap = 1;
+    this.startTime = this.time.now;
+    this.lapStartTime = this.startTime;
+
+    // Evitar doble disparo justo al salir
+    this._canCountLap = false;
+    this.time.delayedCall(600, ()=>{ this._canCountLap = true; });
+  }
+  return;
+}    
     this.physics.add.overlap(this.car, this.finishSensor, ()=>{
       // Para evitar contar vueltas "vibrando" encima: gate por salida
       if(!this._canCountLap) return;
@@ -239,8 +265,8 @@ input.brake = input.brake || kDown;
     updateCarPhysics(this.car, this.state, dt);
 
     // HUD
-    const timeMs = time - this.startTime;
-    setHud({lap:this.lap, lapsTotal:this.lapsTotal, timeMs});
+    const timeMs = this.startTime ? (time - this.startTime) : 0;
+setHud({lap:this.lap, lapsTotal:this.lapsTotal, timeMs});
 
     // Marcas de derrape (MVP visual) cuando hay velocidad + giro
     const speed = this.car.body.velocity.length();

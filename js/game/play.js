@@ -83,7 +83,19 @@ this.checkpointSensor.body.setImmovable(true);
 // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
 this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
   const vy = this.car.body.velocity.y;
-  if (vy < 60) return;      // si no va hacia abajo con fuerza, no vale
+  if (vy < 60) return;
+
+  // Sector 1: meta -> checkpoint
+  const now = this.time.now;
+
+  // Evitar doble registro si te quedas encima del sensor
+  if (!this._checkpointOK) {
+    this.lastCheckpointTime = now;
+
+    // Guardamos S1 temporalmente en la vuelta actual
+    this._currentS1 = now - this.lapStartTime;
+  }
+
   this._checkpointOK = true;
 });
 // Overlap meta
@@ -97,6 +109,10 @@ this._checkpointOK = false;
     this.startTime = this.time.now;
 this.raceFinished = false;
 this.finalTimeMs = 0;
+    // Splits / sectores
+this.lapStartTime = this.startTime;      // inicio de la vuelta actual
+this.lastCheckpointTime = null;          // tiempo absoluto del último checkpoint
+this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
     this.physics.add.overlap(this.car, this.finishSensor, ()=>{
       // Para evitar contar vueltas "vibrando" encima: gate por salida
       if(!this._canCountLap) return;
@@ -106,9 +122,25 @@ const vy = this.car.body.velocity.y;
 if (Math.abs(vy) < 60) return;
       // Solo cuenta si antes pasaste por el checkpoint
 if(!this._checkpointOK) return;
+const now = this.time.now;
 
+// Sector 2: checkpoint -> meta
+const s2 = this.lastCheckpointTime ? (now - this.lastCheckpointTime) : 0;
+
+// Lap time: meta -> meta
+const lapTime = now - this.lapStartTime;
+
+// Sector 1 (si no existiera por algún motivo)
+const s1 = (typeof this._currentS1 === 'number') ? this._currentS1 : (lapTime - s2);
+
+// Guardar registro de la vuelta actual
+this.lapSplits.push({ lap: this.lap, s1, s2, lapTime });
       if (this.lap < this.lapsTotal) {
         this.lap += 1;
+        // Preparar siguiente vuelta
+this.lapStartTime = now;
+this.lastCheckpointTime = null;
+this._currentS1 = null;
 } else {
   // FIN de carrera: congelar y mostrar resultado
   this.finalTimeMs = (this.time.now - this.startTime);

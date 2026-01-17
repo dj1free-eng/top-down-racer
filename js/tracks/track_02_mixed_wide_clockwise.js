@@ -32,30 +32,27 @@ export const track02 = {
   // Obstáculos: aquí es donde “dibujamos” el circuito a medida
   // Cada obstáculo es [x, y, w, h]
   obstacles: [
-    // ==========================
-    // 1) CHICANE SUAVE (simula el 45° izquierda)
-    // Recta superior: metemos dos islas alternadas para obligar a trazar diagonal
-    // ==========================
-    [860, 150, 140, 80],   // isla 1 (cerca del carril interior)
-    [1120, 230, 140, 80],  // isla 2 (desplazada hacia abajo)
+  // ==========================
+  // 1) CHICANE SUAVE (más abierta)
+  // ==========================
+  [900, 150, 110, 70],   // isla 1
+  [1180, 255, 110, 70],  // isla 2 (más separada)
 
-    // ==========================
-    // 2) “HORQUILLA” JUGABLE A DERECHA (zona superior derecha)
-    // Creamos un estrechamiento + isla grande que obliga a girar fuerte
-    // ==========================
-    [1540, 120, 220, 140], // isla grande arriba derecha (te obliga a cerrar)
-    [1740, 260, 180, 90],  // segunda isla para que no sea un giro suave
+  // ==========================
+  // 2) HORQUILLA JUGABLE (sin “embudo” imposible)
+  // Antes había dos bloques que casi cerraban el carril: ahora los separo y los hago más pequeños
+  // ==========================
+  [1600, 125, 160, 110], // isla superior derecha (más compacta)
+  [1780, 310, 120, 70],  // isla secundaria (más abajo y más pequeña)
 
-    // ==========================
-    // 3) SECCIÓN TÉCNICA EN RECTA DERECHA (sin estrechar demasiado)
-    // Un “pellizco” que obliga a frenar un poco pero mantiene ancho general
-    // ==========================
-    [1840, 560, 140, 120], // isla derecha media
+  // ==========================
+  // 3) RECTA DERECHA (pellizco suave)
+  // ==========================
+  [1860, 620, 110, 90],
 
-    // ==========================
-    // 4) ZONA RÁPIDA ABAJO (dejamos más limpio para velocidad)
-    // Solo una isla pequeña para que no sea autopista total
-    // ==========================
-    [1040, 1140, 160, 80],
-  ]
+  // ==========================
+  // 4) ZONA ABAJO (ligera variación, no molesta)
+  // ==========================
+  [1080, 1160, 140, 70],
+]
 };

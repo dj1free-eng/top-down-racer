@@ -43,6 +43,31 @@ this.finishSensor = this.add.zone(trackCenterX, this.worldH/2, trackWidth + 40, 
 this.physics.world.enable(this.finishSensor);
 this.finishSensor.body.setAllowGravity(false);
 this.finishSensor.body.setImmovable(true);
+// Checkpoint (sensor) en la recta derecha (opuesta a meta)
+// En sentido horario, ahí se circula hacia la IZQUIERDA (vx negativa)
+const cpX = this.worldW - 380;
+const cpY = this.worldH / 2;
+
+// Decoración checkpoint (opcional, para verlo)
+this.checkpointLine = this.add.rectangle(cpX, cpY, 18, 260, 0x47ffb8, 0.18);
+this.checkpointLine.setStrokeStyle(2, 0x47ffb8, 0.28);
+
+// Sensor checkpoint
+this.checkpointSensor = this.add.zone(cpX, cpY, 44, 280);
+this.physics.world.enable(this.checkpointSensor);
+this.checkpointSensor.body.setAllowGravity(false);
+this.checkpointSensor.body.setImmovable(true);
+
+// Overlap checkpoint: lo marcamos como "OK" solo si se pasa en sentido correcto
+this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
+  const vx = this.car.body.velocity.x;
+
+  // Debe ir hacia la izquierda con cierta velocidad (sentido de carrera)
+  if (vx > -60) return;
+
+  this._checkpointOK = true;
+});
+    
     // Coche
     this.car = this.physics.add.sprite(320, this.worldH/2, 'car');
     this.car.setDamping(false);
@@ -55,10 +80,13 @@ this.finishSensor.body.setImmovable(true);
     // Colisiones
     this.physics.add.collider(this.car, this.walls);
 
-    // Overlap meta
-    this.lap = 1;
-    this.lapsTotal = 4;
-    this._canCountLap = true;
+// Overlap meta
+this.lap = 1;
+this.lapsTotal = 4;
+this._canCountLap = true;
+
+// Checkpoint: debe pasar por aquí antes de contar vuelta en meta
+this._checkpointOK = false;
 
     this.physics.add.overlap(this.car, this.finishSensor, ()=>{
       // Para evitar contar vueltas "vibrando" encima: gate por salida
@@ -67,6 +95,8 @@ this.finishSensor.body.setImmovable(true);
 // Validación simple: solo cuenta si hay cruce "vertical" con cierta velocidad
 const vy = this.car.body.velocity.y;
 if (Math.abs(vy) < 60) return;
+      // Solo cuenta si antes pasaste por el checkpoint
+if(!this._checkpointOK) return;
 
       if (this.lap < this.lapsTotal) {
         this.lap += 1;
@@ -75,6 +105,8 @@ if (Math.abs(vy) < 60) return;
         this.lap = 1;
         this.startTime = this.time.now;
       }
+      // Consumimos el checkpoint: para la siguiente vuelta hay que volver a pasarlo
+this._checkpointOK = false;
       this._canCountLap = false;
       this.time.delayedCall(600, ()=>{ this._canCountLap = true; });
     });

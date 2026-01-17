@@ -29,16 +29,20 @@ export default class PlayScene extends Phaser.Scene {
     this._addWallRect(460, 360, 24, this.worldH-744);
     this._addWallRect(this.worldW-484, 360, 24, this.worldH-744);
 
-    // Decoración: "piano" de salida/meta
-    this.finishLine = this.add.rectangle(380, this.worldH/2, 18, 260, 0xffffff, 0.25);
-    this.finishLine.setStrokeStyle(2, 0xffffff, 0.35);
+// Decoración: "piano" de salida/meta (CRUZANDO la pista en la recta izquierda)
+const outerLeftInnerEdge = 80 + 24;   // x=104 (borde interior de la pared exterior izquierda)
+const innerLeftWallX = 460;           // x=460 (pared interior izquierda)
+const trackCenterX = (outerLeftInnerEdge + innerLeftWallX) / 2; // centro del carril
+const trackWidth = (innerLeftWallX - outerLeftInnerEdge);       // ancho del carril
 
-    // Trigger de meta (sensor)
-    this.finishSensor = this.add.zone(380, this.worldH/2, 44, 280);
-    this.physics.world.enable(this.finishSensor);
-    this.finishSensor.body.setAllowGravity(false);
-    this.finishSensor.body.setImmovable(true);
+this.finishLine = this.add.rectangle(trackCenterX, this.worldH/2, trackWidth, 18, 0xffffff, 0.25);
+this.finishLine.setStrokeStyle(2, 0xffffff, 0.35);
 
+// Trigger de meta (sensor) — un poco más alto para detectar bien
+this.finishSensor = this.add.zone(trackCenterX, this.worldH/2, trackWidth + 40, 44);
+this.physics.world.enable(this.finishSensor);
+this.finishSensor.body.setAllowGravity(false);
+this.finishSensor.body.setImmovable(true);
     // Coche
     this.car = this.physics.add.sprite(320, this.worldH/2, 'car');
     this.car.setDamping(false);
@@ -60,9 +64,9 @@ export default class PlayScene extends Phaser.Scene {
       // Para evitar contar vueltas "vibrando" encima: gate por salida
       if(!this._canCountLap) return;
 
-      // Validación simple de dirección: solo cuenta si el coche va hacia la derecha (cruza en sentido correcto)
-      const vx = this.car.body.velocity.x;
-      if (vx < 60) return;
+// Validación simple: solo cuenta si hay cruce "vertical" con cierta velocidad
+const vy = this.car.body.velocity.y;
+if (Math.abs(vy) < 60) return;
 
       if (this.lap < this.lapsTotal) {
         this.lap += 1;

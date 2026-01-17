@@ -189,7 +189,7 @@ this._checkpointOK = false;
 // UI overlay fin de carrera
 this._raceEndEl = document.getElementById('raceEnd');
 this._raceEndTimeEl = document.getElementById('raceEndTime');
-
+this._raceEndDetailsEl = document.getElementById('raceEndDetails');
 const btnRestart = document.getElementById('btnRestart');
 if (btnRestart) {
   btnRestart.addEventListener('pointerdown', (e)=>{
@@ -259,7 +259,31 @@ input.brake = input.brake || kDown;
 this.input.enabled = false;
 if (this.game && this.game.canvas) this.game.canvas.style.pointerEvents = 'none';
   }
+// Pintar tabla de sectores y vueltas
+if (this._raceEndDetailsEl) {
+  const rows = this.lapSplits
+    .map(r => `<tr>
+      <td>Vuelta ${r.lap}</td>
+      <td>${this._formatMs(r.s1)}</td>
+      <td>${this._formatMs(r.s2)}</td>
+      <td><strong>${this._formatMs(r.lapTime)}</strong></td>
+    </tr>`)
+    .join('');
 
+  this._raceEndDetailsEl.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Vuelta</th>
+          <th>S1</th>
+          <th>S2</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
 _hideRaceEnd(){
   if (!this._raceEndEl) return;
   this._raceEndEl.classList.add('hidden');
@@ -290,6 +314,11 @@ _hideRaceEnd(){
 
     // Ocultar overlay
     this._hideRaceEnd();
+    this.lapSplits = [];
+this.lapStartTime = this.time.now;
+this.lastCheckpointTime = null;
+this._currentS1 = null;
+    this._checkpointOK = false;
   }
 
   _formatMs(ms){

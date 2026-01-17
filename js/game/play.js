@@ -122,7 +122,9 @@ this.lapStartTime = this.startTime;      // inicio de la vuelta actual
 this.lastCheckpointTime = null;          // tiempo absoluto del último checkpoint
 this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
 
-// ===== ARRANQUE DE CARRERA =====
+
+    this.physics.add.overlap(this.car, this.finishSensor, ()=>{
+   // ===== ARRANQUE DE CARRERA (primer cruce de meta) =====
 if (!this.raceStarted) {
   const vy = this.car.body.velocity.y;
 
@@ -133,13 +135,14 @@ if (!this.raceStarted) {
     this.startTime = this.time.now;
     this.lapStartTime = this.startTime;
 
-    // Evitar doble disparo justo al salir
+    // Gate para que no cuente dos veces
     this._canCountLap = false;
     this.time.delayedCall(600, ()=>{ this._canCountLap = true; });
   }
+
+  // Este cruce NO cuenta como vuelta
   return;
-}    
-    this.physics.add.overlap(this.car, this.finishSensor, ()=>{
+} 
       // Para evitar contar vueltas "vibrando" encima: gate por salida
       if(!this._canCountLap) return;
 

@@ -106,11 +106,17 @@ if(!this._checkpointOK) return;
 
       if (this.lap < this.lapsTotal) {
         this.lap += 1;
-      } else {
-        // Fin: reseteamos a 1 y reiniciamos tiempo (MVP). Luego: pantalla final.
-        this.lap = 1;
-        this.startTime = this.time.now;
-      }
+} else {
+  // FIN de carrera: congelar y mostrar resultado
+  this.finalTimeMs = (this.time.now - this.startTime);
+  this.raceFinished = true;
+  this._showRaceEnd(this.finalTimeMs);
+
+  // Parar coche
+  this.car.body.setVelocity(0,0);
+
+  return;
+}
       // Consumimos el checkpoint: para la siguiente vuelta hay que volver a pasarlo
 this._checkpointOK = false;
       this._canCountLap = false;
@@ -142,13 +148,22 @@ this._checkpointOK = false;
 
     // Timer
     this.startTime = this.time.now;
-
+this.raceFinished = false;
+this.finalTimeMs = 0;
     // HUD init
     setHud({lap:this.lap, lapsTotal:this.lapsTotal, timeMs:0});
 
     // Soporte teclado (por si pruebas en PC, no estorba)
     this.keys = this.input.keyboard?.addKeys('LEFT,RIGHT,UP,DOWN');
+// UI overlay fin de carrera
+this._raceEndEl = document.getElementById('raceEnd');
+this._raceEndTimeEl = document.getElementById('raceEndTime');
 
+const btnRestart = document.getElementById('btnRestart');
+if (btnRestart) btnRestart.addEventListener('click', ()=> this._restartRace());
+
+const btnClose = document.getElementById('btnCloseOverlay');
+if (btnClose) btnClose.addEventListener('click', ()=> this._hideRaceEnd());
     // Pequeño tutorial en consola
     // eslint-disable-next-line no-console
     console.log('Controles: izq/der, acelerar/frenar (táctil). Teclado: flechas.');
@@ -156,7 +171,11 @@ this._checkpointOK = false;
 
   update(time, delta){
     const dt = delta / 1000;
-
+if (this.raceFinished) {
+  // Mantener HUD con tiempo final
+  setHud({lap:this.lap, lapsTotal:this.lapsTotal, timeMs: this.finalTimeMs});
+  return;
+}
 // Mezcla limpia: táctil OR teclado (sin ensuciar el estado táctil)
 const input = this.state.input;
 
@@ -182,6 +201,54 @@ input.brake = input.brake || kDown;
     if (speed > 260 && steering) {
       this._emitSkid();
     }
+
+    _showRaceEnd(timeMs){
+  if (!this._raceEndEl || !this._raceEndTimeEl) return;
+
+  this._raceEndTimeEl.textContent = `Tiempo: ${this._formatMs(timeMs)}`;
+  this._raceEndEl.classList.remove('hidden');
+  this._raceEndEl.setAttribute('aria-hidden', 'false');
+}
+
+_hideRaceEnd(){
+  if (!this._raceEndEl) return;
+  this._raceEndEl.classList.add('hidden');
+  this._raceEndEl.setAttribute('aria-hidden', 'true');
+}
+
+_restartRace(){
+  // Reset lógico
+  this.raceFinished = false;
+  this.finalTimeMs = 0;
+
+  // Reset vueltas
+  this.lap = 1;
+  this._canCountLap = true;
+  this._checkpointOK = false;
+
+  // Reset tiempo
+  this.startTime = this.time.now;
+
+  // Reset coche a salida (ajusta si quieres otra posición)
+  this.car.setPosition(320, this.worldH/2);
+  this.car.setVelocity(0,0);
+  this.car.rotation = 0;
+
+  // Ocultar overlay
+  this._hideRaceEnd();
+}
+
+_formatMs(ms){
+  const total = Math.max(0, Math.floor(ms));
+  const m = Math.floor(total / 60000);
+  const s = Math.floor((total % 60000) / 1000);
+  const t = total % 1000;
+
+  const mm = String(m).padStart(2,'0');
+  const ss = String(s).padStart(2,'0');
+  const tt = String(t).padStart(3,'0');
+  return `${mm}:${ss}.${tt}`;
+}
   }
 
   _addWallRect(x, y, w, h){

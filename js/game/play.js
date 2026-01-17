@@ -2,7 +2,8 @@ import { createTouchControls } from './input.js';
 import { updateCarPhysics } from './physics.js';
 import { setHud } from './ui.js';
 
-export default class PlayScene extends Phaser.Scene {
+import { track01 } from '../tracks/track_01_basic_speed.js';
+import { buildTrack } from '../tracks/trackLoader.js';export default class PlayScene extends Phaser.Scene {
   constructor(){ super('play'); }
 
   create(){
@@ -17,19 +18,13 @@ export default class PlayScene extends Phaser.Scene {
     // Bordes (colliders invisibles) + un circuito simple tipo "óvalo" con paredes
     this.walls = this.physics.add.staticGroup();
 
-    // Pared exterior
-    this._addWallRect(80, 80, this.worldW-160, 24);
-    this._addWallRect(80, this.worldH-104, this.worldW-160, 24);
-    this._addWallRect(80, 80, 24, this.worldH-160);
-    this._addWallRect(this.worldW-104, 80, 24, this.worldH-160);
+// Circuito (datos)
+this.track = track01;
 
-    // Pared interior (simula un circuito)
-    this._addWallRect(460, 360, this.worldW-920, 24);
-    this._addWallRect(460, this.worldH-384, this.worldW-920, 24);
-    this._addWallRect(460, 360, 24, this.worldH-744);
-    this._addWallRect(this.worldW-484, 360, 24, this.worldH-744);
-
-// Decoración: "piano" de salida/meta (CRUZANDO la pista en la recta izquierda)
+// Muros del circuito
+buildTrack(this, this.track);
+    
+    // Decoración: "piano" de salida/meta (CRUZANDO la pista en la recta izquierda)
 const outerLeftInnerEdge = 80 + 24;   // x=104 (borde interior de la pared exterior izquierda)
 const innerLeftWallX = 460;           // x=460 (pared interior izquierda)
 const trackCenterX = (outerLeftInnerEdge + innerLeftWallX) / 2; // centro del carril

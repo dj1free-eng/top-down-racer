@@ -157,13 +157,18 @@ this._checkpointOK = false;
   update(time, delta){
     const dt = delta / 1000;
 
-// Teclado SOLO suma, nunca apaga táctil
-if (this.keys) {
-  if (this.keys.LEFT.isDown) this.inputState.left = true;
-  if (this.keys.RIGHT.isDown) this.inputState.right = true;
-  if (this.keys.UP.isDown) this.inputState.accel = true;
-  if (this.keys.DOWN.isDown) this.inputState.brake = true;
-}
+// Mezcla limpia: táctil OR teclado (sin ensuciar el estado táctil)
+const input = this.state.input;
+
+const kLeft  = !!(this.keys && this.keys.LEFT.isDown);
+const kRight = !!(this.keys && this.keys.RIGHT.isDown);
+const kUp    = !!(this.keys && this.keys.UP.isDown);
+const kDown  = !!(this.keys && this.keys.DOWN.isDown);
+
+input.left  = input.left  || kLeft;
+input.right = input.right || kRight;
+input.accel = input.accel || kUp;
+input.brake = input.brake || kDown;
 
     updateCarPhysics(this.car, this.state, dt);
 

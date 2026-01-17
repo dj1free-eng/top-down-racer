@@ -56,26 +56,30 @@ this.finishSensor.body.setImmovable(true);
     // Colisiones
     this.physics.add.collider(this.car, this.walls);
 // Checkpoint (sensor) en la recta derecha (opuesta a meta)
-// En sentido horario, ahí se circula hacia la IZQUIERDA (vx negativa)
-const outerRightInnerEdge = (this.worldW - 104) - 24; // borde interior de la pared exterior derecha
+// Queremos que sea PERPENDICULAR a la recta (línea horizontal cruzando pista)
+const outerRightInnerEdge = (this.worldW - 104) - 24; // borde interior pared exterior derecha
 const innerRightWallX = (this.worldW - 484);          // pared interior derecha
-const cpX = (outerRightInnerEdge + innerRightWallX) / 2;
+const trackCenterX_R = (outerRightInnerEdge + innerRightWallX) / 2;
+const trackWidth_R = (outerRightInnerEdge - innerRightWallX);
+
+const cpX = trackCenterX_R;
 const cpY = this.worldH / 2;
 
-// Decoración checkpoint (opcional, para verlo)
-this.checkpointLine = this.add.rectangle(cpX, cpY, 18, 260, 0x47ffb8, 0.18);
-this.checkpointLine.setStrokeStyle(2, 0x47ffb8, 0.28);
+// Línea checkpoint fina y negra (cruzando la pista)
+this.checkpointLine = this.add.rectangle(cpX, cpY, trackWidth_R, 6, 0x000000, 0.45);
+// si quieres aún más “línea”, baja a 4
 
-// Sensor checkpoint
-this.checkpointSensor = this.add.zone(cpX, cpY, 44, 280);
+// Sensor checkpoint (más alto para detectar bien, pero sin ser una franja visual)
+this.checkpointSensor = this.add.zone(cpX, cpY, trackWidth_R + 40, 44);
 this.physics.world.enable(this.checkpointSensor);
 this.checkpointSensor.body.setAllowGravity(false);
 this.checkpointSensor.body.setImmovable(true);
 
-// Overlap checkpoint: OK solo si se pasa en sentido correcto (hacia la izquierda)
+// Overlap checkpoint: OK solo si se pasa en sentido correcto.
+// En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
 this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
-  const vx = this.car.body.velocity.x;
-  if (vx > -60) return;       // si no va hacia la izquierda con fuerza, no vale
+  const vy = this.car.body.velocity.y;
+  if (vy < 60) return;      // si no va hacia abajo con fuerza, no vale
   this._checkpointOK = true;
 });
 // Overlap meta

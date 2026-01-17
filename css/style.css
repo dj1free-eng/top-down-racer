@@ -107,3 +107,18 @@ body{
 
 /* Evitar doble-tap zoom / scroll en iOS */
 body, #app, #game { touch-action: none; }
+/* FIX iOS: no selección / no menú / no highlight en controles */
+#controls, #controls *{
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#controls{
+  touch-action: none; /* evita gestos raros en iOS */
+}
+
+#controls button{
+  touch-action: manipulation;
+}

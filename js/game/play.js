@@ -93,7 +93,10 @@ this._canCountLap = true;
 
 // Checkpoint: debe pasar por aquí antes de contar vuelta en meta
 this._checkpointOK = false;
-
+    // Timer
+    this.startTime = this.time.now;
+this.raceFinished = false;
+this.finalTimeMs = 0;
     this.physics.add.overlap(this.car, this.finishSensor, ()=>{
       // Para evitar contar vueltas "vibrando" encima: gate por salida
       if(!this._canCountLap) return;
@@ -146,10 +149,6 @@ this._checkpointOK = false;
       }
     };
 
-    // Timer
-    this.startTime = this.time.now;
-this.raceFinished = false;
-this.finalTimeMs = 0;
     // HUD init
     setHud({lap:this.lap, lapsTotal:this.lapsTotal, timeMs:0});
 
@@ -201,56 +200,54 @@ input.brake = input.brake || kDown;
     if (speed > 260 && steering) {
       this._emitSkid();
     }
+  }
+  _showRaceEnd(timeMs){
+    if (!this._raceEndEl || !this._raceEndTimeEl) return;
 
-    _showRaceEnd(timeMs){
-  if (!this._raceEndEl || !this._raceEndTimeEl) return;
-
-  this._raceEndTimeEl.textContent = `Tiempo: ${this._formatMs(timeMs)}`;
-  this._raceEndEl.classList.remove('hidden');
-  this._raceEndEl.setAttribute('aria-hidden', 'false');
-}
-
-_hideRaceEnd(){
-  if (!this._raceEndEl) return;
-  this._raceEndEl.classList.add('hidden');
-  this._raceEndEl.setAttribute('aria-hidden', 'true');
-}
-
-_restartRace(){
-  // Reset lógico
-  this.raceFinished = false;
-  this.finalTimeMs = 0;
-
-  // Reset vueltas
-  this.lap = 1;
-  this._canCountLap = true;
-  this._checkpointOK = false;
-
-  // Reset tiempo
-  this.startTime = this.time.now;
-
-  // Reset coche a salida (ajusta si quieres otra posición)
-  this.car.setPosition(320, this.worldH/2);
-  this.car.setVelocity(0,0);
-  this.car.rotation = 0;
-
-  // Ocultar overlay
-  this._hideRaceEnd();
-}
-
-_formatMs(ms){
-  const total = Math.max(0, Math.floor(ms));
-  const m = Math.floor(total / 60000);
-  const s = Math.floor((total % 60000) / 1000);
-  const t = total % 1000;
-
-  const mm = String(m).padStart(2,'0');
-  const ss = String(s).padStart(2,'0');
-  const tt = String(t).padStart(3,'0');
-  return `${mm}:${ss}.${tt}`;
-}
+    this._raceEndTimeEl.textContent = `Tiempo: ${this._formatMs(timeMs)}`;
+    this._raceEndEl.classList.remove('hidden');
+    this._raceEndEl.setAttribute('aria-hidden', 'false');
   }
 
+  _hideRaceEnd(){
+    if (!this._raceEndEl) return;
+    this._raceEndEl.classList.add('hidden');
+    this._raceEndEl.setAttribute('aria-hidden', 'true');
+  }
+
+  _restartRace(){
+    // Reset lógico
+    this.raceFinished = false;
+    this.finalTimeMs = 0;
+
+    // Reset vueltas
+    this.lap = 1;
+    this._canCountLap = true;
+    this._checkpointOK = false;
+
+    // Reset tiempo
+    this.startTime = this.time.now;
+
+    // Reset coche a salida
+    this.car.setPosition(320, this.worldH/2);
+    this.car.setVelocity(0,0);
+    this.car.rotation = 0;
+
+    // Ocultar overlay
+    this._hideRaceEnd();
+  }
+
+  _formatMs(ms){
+    const total = Math.max(0, Math.floor(ms));
+    const m = Math.floor(total / 60000);
+    const s = Math.floor((total % 60000) / 1000);
+    const t = total % 1000;
+
+    const mm = String(m).padStart(2,'0');
+    const ss = String(s).padStart(2,'0');
+    const tt = String(t).padStart(3,'0');
+    return `${mm}:${ss}.${tt}`;
+  }
   _addWallRect(x, y, w, h){
     const r = this.add.rectangle(x + w/2, y + h/2, w, h, 0xff6a00, 0.12);
     r.setStrokeStyle(2, 0xff6a00, 0.22);

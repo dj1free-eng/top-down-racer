@@ -255,35 +255,39 @@ input.brake = input.brake || kDown;
     this._raceEndTimeEl.textContent = `Tiempo: ${this._formatMs(timeMs)}`;
     this._raceEndEl.classList.remove('hidden');
     this._raceEndEl.setAttribute('aria-hidden', 'false');
-// Bloquear input del juego mientras el modal está abierto
-this.input.enabled = false;
-if (this.game && this.game.canvas) this.game.canvas.style.pointerEvents = 'none';
-  }
-// Pintar tabla de sectores y vueltas
-if (this._raceEndDetailsEl) {
-  const rows = this.lapSplits
-    .map(r => `<tr>
-      <td>Vuelta ${r.lap}</td>
-      <td>${this._formatMs(r.s1)}</td>
-      <td>${this._formatMs(r.s2)}</td>
-      <td><strong>${this._formatMs(r.lapTime)}</strong></td>
-    </tr>`)
-    .join('');
 
-  this._raceEndDetailsEl.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Vuelta</th>
-          <th>S1</th>
-          <th>S2</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
+    // Pintar tabla de sectores y vueltas
+    if (this._raceEndDetailsEl) {
+      const rows = this.lapSplits
+        .map(r => `<tr>
+          <td>Vuelta ${r.lap}</td>
+          <td>${this._formatMs(r.s1)}</td>
+          <td>${this._formatMs(r.s2)}</td>
+          <td><strong>${this._formatMs(r.lapTime)}</strong></td>
+        </tr>`)
+        .join('');
+
+      this._raceEndDetailsEl.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Vuelta</th>
+              <th>S1</th>
+              <th>S2</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    // Bloquear input del juego mientras el modal está abierto
+    this.input.enabled = false;
+    if (this.game && this.game.canvas) {
+      this.game.canvas.style.pointerEvents = 'none';
+    }
+  }
 _hideRaceEnd(){
   if (!this._raceEndEl) return;
   this._raceEndEl.classList.add('hidden');

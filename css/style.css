@@ -157,3 +157,25 @@ body, #app, #game { touch-action: none; }
   gap:10px;
   justify-content: flex-end;
 }
+.overlay-details{
+  color: rgba(255,255,255,.80);
+  font-size: 14px;
+  margin-bottom: 12px;
+  max-height: 38vh;
+  overflow: auto;
+}
+
+.overlay-details table{
+  width: 100%;
+  border-collapse: collapse;
+}
+.overlay-details th,
+.overlay-details td{
+  padding: 6px 4px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: right;
+}
+.overlay-details th:first-child,
+.overlay-details td:first-child{
+  text-align: left;
+}

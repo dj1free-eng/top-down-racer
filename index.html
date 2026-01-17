@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#070913" />
+  <title>Top-Down Racer (PWA)</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="game"></div>
+
+    <!-- HUD superior -->
+    <div id="hud">
+      <div class="hud-chip" id="hudLap">Vuelta: 1/4</div>
+      <div class="hud-chip" id="hudTime">00:00.000</div>
+    </div>
+
+    <!-- Controles táctiles: dos esquinas inferiores -->
+    <div id="controls" aria-hidden="false">
+      <div class="pad left">
+        <button class="btn" id="btnLeft"  type="button">◀</button>
+        <button class="btn" id="btnRight" type="button">▶</button>
+      </div>
+      <div class="pad right">
+        <button class="btn primary" id="btnAccel" type="button">ACELERAR</button>
+        <button class="btn" id="btnBrake" type="button">FRENAR</button>
+      </div>
+    </div>
+
+    <!-- Mensaje mini -->
+    <div id="toast" class="hidden">Listo</div>
+  </div>
+
+  <!-- Phaser por CDN (rápido para MVP) -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

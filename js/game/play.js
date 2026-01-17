@@ -62,19 +62,16 @@ this.finishSensor.body.setImmovable(true);
 const outerRightInnerEdge = (this.worldW - 104) - 24; // = worldW - 128
 
 // Borde interior de la pared interior derecha (donde empieza el asfalto)
-const innerRightWallRightEdge = (this.worldW - 484) + 24; // pared interior derecha: x=(worldW-484), ancho 24
+// pared interior derecha: x=(worldW-484), ancho 24  => borde interior (lado derecho) = +24
+const innerRightWallRightEdge = (this.worldW - 484) + 24;
 
 const trackWidth_R = outerRightInnerEdge - innerRightWallRightEdge;
 const cpX = (outerRightInnerEdge + innerRightWallRightEdge) / 2;
 const cpY = this.worldH / 2;
 
-const cpX = trackCenterX_R;
-const cpY = this.worldH / 2;
-
 // Línea checkpoint fina y negra (cruzando TODO el carril)
 this.checkpointLine = this.add.rectangle(cpX, cpY, trackWidth_R, 4, 0x000000, 0.60);
 this.checkpointLine.setDepth(10); // por encima de paredes para que no se “tape”
-// si quieres aún más “línea”, baja a 4
 
 // Sensor checkpoint (más alto para detectar bien, pero sin ser una franja visual)
 this.checkpointSensor = this.add.zone(cpX, cpY, trackWidth_R + 40, 44);

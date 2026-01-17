@@ -3,6 +3,7 @@ import { updateCarPhysics } from './physics.js';
 import { setHud } from './ui.js';
 
 import { track01 } from '../tracks/track_01_basic_speed.js';
+import { track02 } from '../tracks/track_02_mixed_wide_clockwise.js';
 import { buildTrack } from '../tracks/trackLoader.js';export default class PlayScene extends Phaser.Scene {
   constructor(){ super('play'); }
 
@@ -19,7 +20,7 @@ import { buildTrack } from '../tracks/trackLoader.js';export default class PlayS
     this.walls = this.physics.add.staticGroup();
 
 // Circuito (datos)
-this.track = track01;
+this.track = track02;
 
 // Muros del circuito
 buildTrack(this, this.track);

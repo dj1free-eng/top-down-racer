@@ -56,17 +56,24 @@ this.finishSensor.body.setImmovable(true);
     // Colisiones
     this.physics.add.collider(this.car, this.walls);
 // Checkpoint (sensor) en la recta derecha (opuesta a meta)
-// Queremos que sea PERPENDICULAR a la recta (línea horizontal cruzando pista)
-const outerRightInnerEdge = (this.worldW - 104) - 24; // borde interior pared exterior derecha
-const innerRightWallX = (this.worldW - 484);          // pared interior derecha
-const trackCenterX_R = (outerRightInnerEdge + innerRightWallX) / 2;
-const trackWidth_R = (outerRightInnerEdge - innerRightWallX);
+// PERPENDICULAR a la recta: línea horizontal cruzando el carril
+
+// Borde interior de la pared exterior derecha (donde empieza el asfalto)
+const outerRightInnerEdge = (this.worldW - 104) - 24; // = worldW - 128
+
+// Borde interior de la pared interior derecha (donde empieza el asfalto)
+const innerRightWallRightEdge = (this.worldW - 484) + 24; // pared interior derecha: x=(worldW-484), ancho 24
+
+const trackWidth_R = outerRightInnerEdge - innerRightWallRightEdge;
+const cpX = (outerRightInnerEdge + innerRightWallRightEdge) / 2;
+const cpY = this.worldH / 2;
 
 const cpX = trackCenterX_R;
 const cpY = this.worldH / 2;
 
-// Línea checkpoint fina y negra (cruzando la pista)
-this.checkpointLine = this.add.rectangle(cpX, cpY, trackWidth_R, 6, 0x000000, 0.45);
+// Línea checkpoint fina y negra (cruzando TODO el carril)
+this.checkpointLine = this.add.rectangle(cpX, cpY, trackWidth_R, 4, 0x000000, 0.60);
+this.checkpointLine.setDepth(10); // por encima de paredes para que no se “tape”
 // si quieres aún más “línea”, baja a 4
 
 // Sensor checkpoint (más alto para detectar bien, pero sin ser una franja visual)

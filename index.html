@@ -30,7 +30,17 @@
         <button class="btn" id="btnBrake" type="button">FRENAR</button>
       </div>
     </div>
-
+<!-- Overlay fin de carrera -->
+<div id="raceEnd" class="overlay hidden" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="overlay-card">
+    <div class="overlay-title">Carrera terminada</div>
+    <div class="overlay-sub" id="raceEndTime">Tiempo: 00:00.000</div>
+    <div class="overlay-actions">
+      <button class="btn primary" id="btnRestart" type="button">Reiniciar</button>
+      <button class="btn" id="btnCloseOverlay" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
     <!-- Mensaje mini -->
     <div id="toast" class="hidden">Listo</div>
   </div>

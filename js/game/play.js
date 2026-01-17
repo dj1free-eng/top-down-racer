@@ -159,10 +159,26 @@ this._raceEndEl = document.getElementById('raceEnd');
 this._raceEndTimeEl = document.getElementById('raceEndTime');
 
 const btnRestart = document.getElementById('btnRestart');
-if (btnRestart) btnRestart.addEventListener('click', ()=> this._restartRace());
+if (btnRestart) {
+  btnRestart.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    this._restartRace();
+  }, { passive:false });
+
+  // backup
+  btnRestart.addEventListener('click', ()=> this._restartRace());
+}
 
 const btnClose = document.getElementById('btnCloseOverlay');
-if (btnClose) btnClose.addEventListener('click', ()=> this._hideRaceEnd());
+if (btnClose) {
+  btnClose.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    this._hideRaceEnd();
+  }, { passive:false });
+
+  // backup
+  btnClose.addEventListener('click', ()=> this._hideRaceEnd());
+}
     // Pequeño tutorial en consola
     // eslint-disable-next-line no-console
     console.log('Controles: izq/der, acelerar/frenar (táctil). Teclado: flechas.');
@@ -207,13 +223,20 @@ input.brake = input.brake || kDown;
     this._raceEndTimeEl.textContent = `Tiempo: ${this._formatMs(timeMs)}`;
     this._raceEndEl.classList.remove('hidden');
     this._raceEndEl.setAttribute('aria-hidden', 'false');
+// Bloquear input del juego mientras el modal está abierto
+this.input.enabled = false;
+if (this.game && this.game.canvas) this.game.canvas.style.pointerEvents = 'none';
   }
 
-  _hideRaceEnd(){
-    if (!this._raceEndEl) return;
-    this._raceEndEl.classList.add('hidden');
-    this._raceEndEl.setAttribute('aria-hidden', 'true');
-  }
+_hideRaceEnd(){
+  if (!this._raceEndEl) return;
+  this._raceEndEl.classList.add('hidden');
+  this._raceEndEl.setAttribute('aria-hidden', 'true');
+
+  // Reactivar input del juego
+  this.input.enabled = true;
+  if (this.game && this.game.canvas) this.game.canvas.style.pointerEvents = 'auto';
+}
 
   _restartRace(){
     // Reset lógico

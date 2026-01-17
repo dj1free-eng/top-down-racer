@@ -43,30 +43,6 @@ this.finishSensor = this.add.zone(trackCenterX, this.worldH/2, trackWidth + 40, 
 this.physics.world.enable(this.finishSensor);
 this.finishSensor.body.setAllowGravity(false);
 this.finishSensor.body.setImmovable(true);
-// Checkpoint (sensor) en la recta derecha (opuesta a meta)
-// En sentido horario, ahí se circula hacia la IZQUIERDA (vx negativa)
-const cpX = this.worldW - 380;
-const cpY = this.worldH / 2;
-
-// Decoración checkpoint (opcional, para verlo)
-this.checkpointLine = this.add.rectangle(cpX, cpY, 18, 260, 0x47ffb8, 0.18);
-this.checkpointLine.setStrokeStyle(2, 0x47ffb8, 0.28);
-
-// Sensor checkpoint
-this.checkpointSensor = this.add.zone(cpX, cpY, 44, 280);
-this.physics.world.enable(this.checkpointSensor);
-this.checkpointSensor.body.setAllowGravity(false);
-this.checkpointSensor.body.setImmovable(true);
-
-// Overlap checkpoint: lo marcamos como "OK" solo si se pasa en sentido correcto
-this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
-  const vx = this.car.body.velocity.x;
-
-  // Debe ir hacia la izquierda con cierta velocidad (sentido de carrera)
-  if (vx > -60) return;
-
-  this._checkpointOK = true;
-});
     
     // Coche
     this.car = this.physics.add.sprite(320, this.worldH/2, 'car');
@@ -79,7 +55,29 @@ this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
 
     // Colisiones
     this.physics.add.collider(this.car, this.walls);
+// Checkpoint (sensor) en la recta derecha (opuesta a meta)
+// En sentido horario, ahí se circula hacia la IZQUIERDA (vx negativa)
+const outerRightInnerEdge = (this.worldW - 104) - 24; // borde interior de la pared exterior derecha
+const innerRightWallX = (this.worldW - 484);          // pared interior derecha
+const cpX = (outerRightInnerEdge + innerRightWallX) / 2;
+const cpY = this.worldH / 2;
 
+// Decoración checkpoint (opcional, para verlo)
+this.checkpointLine = this.add.rectangle(cpX, cpY, 18, 260, 0x47ffb8, 0.18);
+this.checkpointLine.setStrokeStyle(2, 0x47ffb8, 0.28);
+
+// Sensor checkpoint
+this.checkpointSensor = this.add.zone(cpX, cpY, 44, 280);
+this.physics.world.enable(this.checkpointSensor);
+this.checkpointSensor.body.setAllowGravity(false);
+this.checkpointSensor.body.setImmovable(true);
+
+// Overlap checkpoint: OK solo si se pasa en sentido correcto (hacia la izquierda)
+this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
+  const vx = this.car.body.velocity.x;
+  if (vx > -60) return;       // si no va hacia la izquierda con fuerza, no vale
+  this._checkpointOK = true;
+});
 // Overlap meta
 this.lap = 1;
 this.lapsTotal = 4;

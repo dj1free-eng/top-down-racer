@@ -115,17 +115,13 @@ export default class PlayScene extends Phaser.Scene {
   update(time, delta){
     const dt = delta / 1000;
 
-    // Mezclar teclado (si existe) con táctil (sin romper móvil)
-    if (this.keys) {
-      if (this.keys.LEFT.isDown) this.inputState.left = true;
-      if (this.keys.RIGHT.isDown) this.inputState.right = true;
-      if (this.keys.UP.isDown) this.inputState.accel = true;
-      if (this.keys.DOWN.isDown) this.inputState.brake = true;
-      if (this.keys.LEFT.isUp && !this.inputState.left) this.inputState.left = false;
-      if (this.keys.RIGHT.isUp && !this.inputState.right) this.inputState.right = false;
-      if (this.keys.UP.isUp && !this.inputState.accel) this.inputState.accel = false;
-      if (this.keys.DOWN.isUp && !this.inputState.brake) this.inputState.brake = false;
-    }
+// Teclado SOLO suma, nunca apaga táctil
+if (this.keys) {
+  if (this.keys.LEFT.isDown) this.inputState.left = true;
+  if (this.keys.RIGHT.isDown) this.inputState.right = true;
+  if (this.keys.UP.isDown) this.inputState.accel = true;
+  if (this.keys.DOWN.isDown) this.inputState.brake = true;
+}
 
     updateCarPhysics(this.car, this.state, dt);
 
@@ -138,14 +134,6 @@ export default class PlayScene extends Phaser.Scene {
     const steering = (this.inputState.left ? 1 : 0) + (this.inputState.right ? 1 : 0);
     if (speed > 260 && steering) {
       this._emitSkid();
-    }
-
-    // Reset visual de teclado (para no quedarse enganchado al soltar)
-    if (this.keys) {
-      if (this.keys.LEFT.isUp) this.inputState.left = false;
-      if (this.keys.RIGHT.isUp) this.inputState.right = false;
-      if (this.keys.UP.isUp) this.inputState.accel = false;
-      if (this.keys.DOWN.isUp) this.inputState.brake = false;
     }
   }
 

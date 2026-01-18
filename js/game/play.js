@@ -244,7 +244,29 @@ if (timeEl) {
       this._setExportVisible(true);
     }
   };
+// ===== iOS: bloquear menú contextual/selección en controles táctiles =====
+const lockNoContext = (el) => {
+  if (!el) return;
 
+  el.style.webkitUserSelect = 'none';
+  el.style.userSelect = 'none';
+  el.style.webkitTouchCallout = 'none';
+  el.style.touchAction = 'manipulation';
+
+  // Mata el menú contextual (long-press)
+  el.addEventListener('contextmenu', (e) => e.preventDefault(), { passive:false });
+
+  // Evita que Safari interprete el touch como selección
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive:false });
+};
+
+// Aplica SOLO a los botones dentro de #controls
+document.querySelectorAll('#controls button, #controls [role="button"], #controls .btn')
+  .forEach(lockNoContext);
+
+// Y opcionalmente al reloj/vuelta (siguen siendo "tapables" para el egg)
+lockNoContext(document.getElementById('hudTime'));
+lockNoContext(document.getElementById('hudLap'));
   // iOS a veces ignora pointer en elementos DOM para gestos de zoom,
   // por eso ponemos touchstart como “arma principal”.
   timeEl.addEventListener('touchstart', tap, { passive: false });

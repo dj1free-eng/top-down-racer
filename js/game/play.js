@@ -486,34 +486,49 @@ this._currentS1 = null;
 // ===== Exportar “foto” del mapa completo (PNG) =====
 // Objetivo: capturar worldW x worldH SIN tocar scroll/zoom/follow de la cámara del jugador.
 _dumpMapScreenshot(){
-  // Abrir ventana DURANTE el gesto (iOS-safe)
-  const win = window.open('', '_blank');
+  console.log('[MAP] click -> start');
+
+  // Overlay (plan A, nunca lo bloquea iOS)
+  this._ensureMapOverlay();
+  this._showMapOverlayLoading();
 
   const rt = this._getMapRenderTexture();
   this._renderWorldInto(rt);
 
-  rt.snapshot((image) => {
-    if (!win) return;
+  // IMPORTANTE: dejar pasar 1 tick para que el renderer “vea” el RT dibujado
+  this.time.delayedCall(0, () => {
+    console.log('[MAP] snapshot -> requested');
 
-    win.document.open();
-    win.document.write(`
-      <title>Mapa</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <style>
-        html,body{margin:0;padding:0;background:#0b0b0f;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
-        header{position:sticky;top:0;background:rgba(11,11,15,.92);backdrop-filter:blur(8px);padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12)}
-        a{color:#8ae6ff;text-decoration:none;font-weight:700}
-        img{width:100%;height:auto;display:block}
-        .hint{opacity:.75;font-size:13px}
-      </style>
-      <header>
-        <div><strong>Mapa completo</strong> <span class="hint">(${this.worldW}×${this.worldH})</span></div>
-        <div class="hint">Mantén pulsado sobre la imagen para “Guardar en Fotos”.</div>
-        <div style="margin-top:6px"><a href="${image.src}" download="mapa.png">Descargar PNG</a></div>
-      </header>
-      <img src="${image.src}" alt="Mapa completo" />
-    `);
-    win.document.close();
+    rt.snapshot((image) => {
+      console.log('[MAP] snapshot -> callback', !!image, image?.src?.length);
+
+      if (!image || !image.src) {
+        this._showMapOverlayError('Snapshot vacío (sin src).');
+        return;
+      }
+
+      // Mostrar en overlay (seguro)
+      this._showMapOverlayImage(image.src);
+
+      // Intento opcional de abrir pestaña. Si iOS lo bloquea, no pasa nada.
+      try {
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.open();
+          win.document.write(`
+            <title>Mapa</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <img src="${image.src}" style="width:100%;height:auto;display:block"/>
+          `);
+          win.document.close();
+        } else {
+          console.log('[MAP] window.open BLOQUEADO (win=null)');
+        }
+      } catch (err) {
+        console.log('[MAP] window.open ERROR', err);
+      }
+    });
+
   });
 }
 
@@ -572,5 +587,102 @@ _renderWorldInto(rt){
 
   // 5) Marcas de derrape (Graphics). Si te dieran problemas, simplemente no las dibujes.
   // if (this._skidG) rt.draw(this._skidG);
+}
+  _ensureMapOverlay(){
+  if (this._mapOverlayEl) return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'mapOverlay';
+  wrap.style.position = 'fixed';
+  wrap.style.inset = '0';
+  wrap.style.zIndex = '9999999';
+  wrap.style.background = 'rgba(0,0,0,0.86)';
+  wrap.style.display = 'none';
+  wrap.style.flexDirection = 'column';
+
+  const bar = document.createElement('div');
+  bar.style.display = 'flex';
+  bar.style.justifyContent = 'space-between';
+  bar.style.alignItems = 'center';
+  bar.style.padding = '12px 12px';
+  bar.style.borderBottom = '1px solid rgba(255,255,255,0.15)';
+  bar.style.fontFamily = 'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif';
+  bar.style.color = '#fff';
+
+  const title = document.createElement('div');
+  title.textContent = 'Mapa completo';
+  title.style.fontWeight = '800';
+
+  const close = document.createElement('button');
+  close.textContent = 'Cerrar';
+  close.style.padding = '10px 12px';
+  close.style.borderRadius = '10px';
+  close.style.border = '1px solid rgba(255,255,255,0.25)';
+  close.style.background = 'rgba(255,255,255,0.08)';
+  close.style.color = '#fff';
+  close.style.fontWeight = '800';
+  close.style.touchAction = 'manipulation';
+  close.addEventListener('touchstart', (e)=>{ e.preventDefault(); this._hideMapOverlay(); }, { passive:false });
+  close.addEventListener('pointerdown', (e)=>{ e.preventDefault(); this._hideMapOverlay(); }, { passive:false });
+
+  bar.appendChild(title);
+  bar.appendChild(close);
+
+  const body = document.createElement('div');
+  body.style.flex = '1';
+  body.style.overflow = 'auto';
+  body.style.display = 'flex';
+  body.style.justifyContent = 'center';
+  body.style.alignItems = 'flex-start';
+  body.style.padding = '12px';
+
+  const msg = document.createElement('div');
+  msg.style.color = 'rgba(255,255,255,0.85)';
+  msg.style.fontFamily = 'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif';
+  msg.style.fontSize = '14px';
+  msg.style.padding = '10px 0';
+
+  const img = document.createElement('img');
+  img.style.maxWidth = '100%';
+  img.style.height = 'auto';
+  img.style.display = 'none';
+  img.style.borderRadius = '12px';
+
+  body.appendChild(document.createElement('div')).appendChild(msg);
+  body.firstChild.appendChild(img);
+
+  wrap.appendChild(bar);
+  wrap.appendChild(body);
+
+  document.body.appendChild(wrap);
+
+  this._mapOverlayEl = wrap;
+  this._mapOverlayMsgEl = msg;
+  this._mapOverlayImgEl = img;
+}
+
+_showMapOverlayLoading(){
+  this._mapOverlayEl.style.display = 'flex';
+  this._mapOverlayMsgEl.textContent = 'Generando mapa…';
+  this._mapOverlayImgEl.style.display = 'none';
+  this._mapOverlayImgEl.src = '';
+}
+
+_showMapOverlayImage(dataUrl){
+  this._mapOverlayEl.style.display = 'flex';
+  this._mapOverlayMsgEl.textContent = `Tamaño: ${this.worldW}×${this.worldH}. Mantén pulsado la imagen para guardar.`;
+  this._mapOverlayImgEl.src = dataUrl;
+  this._mapOverlayImgEl.style.display = 'block';
+}
+
+_showMapOverlayError(text){
+  this._mapOverlayEl.style.display = 'flex';
+  this._mapOverlayMsgEl.textContent = `ERROR: ${text}`;
+  this._mapOverlayImgEl.style.display = 'none';
+  this._mapOverlayImgEl.src = '';
+}
+
+_hideMapOverlay(){
+  if (this._mapOverlayEl) this._mapOverlayEl.style.display = 'none';
 }
 }

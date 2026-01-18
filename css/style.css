@@ -34,8 +34,15 @@ body{
   display:flex;
   gap:10px;
   justify-content:space-between;
-  pointer-events:none;
+  pointer-events:none; /* el HUD en general no intercepta */
   z-index:5;
+}
+
+/* PERO el reloj y la vuelta sí deben poder recibir taps (Easter egg) */
+#hudTime, #hudLap{
+  pointer-events:auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .hud-chip{
   background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));

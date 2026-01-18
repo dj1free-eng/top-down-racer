@@ -387,4 +387,33 @@ this._currentS1 = null;
     // fade out cheaply
     this._skidG.alpha = Math.max(0.15, this._skidG.alpha - 0.0008);
   }
+
+  // ===== Exportar “foto” del mapa completo (PNG) =====
+  _dumpMapScreenshot(){
+    const cam = this.cameras.main;
+
+    // Guardar estado actual
+    const prevFollow = cam._follow;
+    const prevZoom = cam.zoom;
+
+    // Ajustar cámara al mundo completo
+    cam.stopFollow();
+    cam.setZoom(1);
+    cam.setScroll(0, 0);
+
+    // IMPORTANTE: poner la cámara al tamaño del mundo para capturarlo entero
+    cam.setSize(this.worldW, this.worldH);
+
+    cam.snapshot((image) => {
+      const a = document.createElement('a');
+      a.href = image.src;
+      a.download = 'track_debug.png';
+      a.click();
+
+      // Restaurar cámara a tamaño pantalla
+      cam.setSize(this.scale.width, this.scale.height);
+      cam.setZoom(prevZoom);
+      if (prevFollow) cam.startFollow(this.car);
+    });
+  }
 }

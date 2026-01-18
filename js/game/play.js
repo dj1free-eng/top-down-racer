@@ -215,33 +215,40 @@ this._checkpointOK = false;
 this._raceEndEl = document.getElementById('raceEnd');
 this._raceEndTimeEl = document.getElementById('raceEndTime');
 this._raceEndDetailsEl = document.getElementById('raceEndDetails');
-// ===== Easter egg: 7 toques en el reloj (hudTime) =====
+
+// ===== Easter egg: 7 toques en el reloj (hudTime) SIN ZOOM iOS =====
 this._eggTapCount = 0;
 this._eggTapTimer = null;
 
-// Elemento REAL del reloj
 const timeEl = document.getElementById('hudTime');
 
 if (timeEl) {
-  // Aseguramos que acepta toques
-  timeEl.style.pointerEvents = 'auto';
+  // Evita selección/menús y reduce gestos de zoom en iOS
+  timeEl.style.webkitUserSelect = 'none';
+  timeEl.style.userSelect = 'none';
+  timeEl.style.webkitTouchCallout = 'none';
+  timeEl.style.touchAction = 'manipulation'; // importante
 
-  timeEl.addEventListener('pointerdown', () => {
-    // Si pasan más de 1.2s sin tocar, se reinicia el contador
+  const tap = (e) => {
+    // CLAVE: sin esto, iOS hace zoom con taps rápidos
+    e.preventDefault();
+    e.stopPropagation();
+
     if (this._eggTapTimer) clearTimeout(this._eggTapTimer);
-    this._eggTapTimer = setTimeout(() => {
-      this._eggTapCount = 0;
-    }, 1200);
+    this._eggTapTimer = setTimeout(() => { this._eggTapCount = 0; }, 1200);
 
     this._eggTapCount += 1;
 
     if (this._eggTapCount >= 7) {
       this._eggTapCount = 0;
-
-      // Mostrar botón MAP
       this._setExportVisible(true);
     }
-  });
+  };
+
+  // iOS a veces ignora pointer en elementos DOM para gestos de zoom,
+  // por eso ponemos touchstart como “arma principal”.
+  timeEl.addEventListener('touchstart', tap, { passive: false });
+  timeEl.addEventListener('pointerdown', tap, { passive: false }); // backup
 }
     const btnRestart = document.getElementById('btnRestart');
 if (btnRestart) {

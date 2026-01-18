@@ -62,7 +62,22 @@ export const track02 = {
   // - thickness: grosor del muro (px)
   // - step: distancia entre bloques (px). Menor = más suave, más coste.
   slanted: [
-    // Ejemplo (BORRA o edita):
-    // [600, 240, 820, 380, 24, 16],
-  ]
+  // Arriba izquierda (↘)
+  [520, 170, 660, 300, 24, 16],
+
+  // Arriba centro (↗)
+  [860, 310, 1020, 230, 24, 16],
+
+  // Arriba derecha (↘)
+  [1230, 190, 1480, 300, 24, 16],
+
+  // Centro derecha (↗ corto)
+  [1460, 360, 1600, 300, 24, 16],
+
+  // Derecha vertical pronunciado (↗)
+  [1710, 430, 1880, 650, 24, 16],
+
+  // Abajo centro (↘ largo)
+  [1030, 1120, 1380, 1250, 24, 16],
+]
 };

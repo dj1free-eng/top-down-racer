@@ -1,5 +1,5 @@
 /* Simple SW: cache shell + network-first for phaser CDN */
-const CACHE = 'racer-shell-v1';
+const CACHE = 'racer-shell-v2';
 const SHELL = [
   './',
   './index.html',

@@ -483,40 +483,41 @@ this._currentS1 = null;
     if (visible) this._exportBtnEl.classList.remove('hidden');
     else this._exportBtnEl.classList.add('hidden');
   }
-// ===== Exportar “foto” del mapa completo (PNG) =====
-_dumpMapScreenshot(){
-  const cam = this.cameras.main;
 
-  // Abrir ventana DURANTE el gesto (iOS-safe)
-  const win = window.open('', '_blank');
+  // ===== Exportar “foto” del mapa completo (PNG) =====
+  _dumpMapScreenshot(){
+    const cam = this.cameras.main;
 
-  // Guardar estado actual
-  const prevScrollX = cam.scrollX;
-  const prevScrollY = cam.scrollY;
-  const prevZoom = cam.zoom;
-  const wasFollowing = !!cam._follow;
+    // Abrir ventana DURANTE el gesto (iOS-safe)
+    const win = window.open('', '_blank');
 
-  // Ajustar cámara al mundo (SIN cambiar tamaño)
-  cam.stopFollow();
-  cam.setZoom(1);
-  cam.setScroll(0, 0);
+    // Guardar estado actual
+    const prevScrollX = cam.scrollX;
+    const prevScrollY = cam.scrollY;
+    const prevZoom = cam.zoom;
+    const wasFollowing = !!cam._follow;
 
-  // Esperar un frame para que Phaser renderice bien
-  this.time.delayedCall(0, () => {
-    cam.snapshot((image) => {
-      if (win) {
-        win.document.open();
-        win.document.write(
-          `<title>Mapa</title>
-           <img src="${image.src}" style="width:100%;height:auto"/>`
-        );
-        win.document.close();
-      }
+    // Ajustar cámara al mundo (SIN cambiar tamaño)
+    cam.stopFollow();
+    cam.setZoom(1);
+    cam.setScroll(0, 0);
 
-      // Restaurar cámara EXACTAMENTE como estaba
-      cam.setZoom(prevZoom);
-      cam.setScroll(prevScrollX, prevScrollY);
-      if (wasFollowing) cam.startFollow(this.car);
+    // Esperar un frame para que Phaser renderice bien
+    this.time.delayedCall(0, () => {
+      cam.snapshot((image) => {
+        if (win) {
+          win.document.open();
+          win.document.write(
+            `<title>Mapa</title>
+             <img src="${image.src}" style="width:100%;height:auto"/>`
+          );
+          win.document.close();
+        }
+
+        // Restaurar cámara EXACTAMENTE como estaba
+        cam.setZoom(prevZoom);
+        cam.setScroll(prevScrollX, prevScrollY);
+        if (wasFollowing) cam.startFollow(this.car);
+      });
     });
-  });
-}
+  }

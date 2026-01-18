@@ -32,52 +32,14 @@ export const track02 = {
   // Obstáculos: aquí es donde “dibujamos” el circuito a medida
   // Cada obstáculo es [x, y, w, h]
   obstacles: [
-  // ==========================
-  // 1) CHICANE SUAVE (más abierta)
-  // ==========================
-  [900, 150, 110, 70],   // isla 1
-  [1180, 255, 110, 70],  // isla 2 (más separada)
+  [1672, 308, 230, 176],
+],
 
-  // ==========================
-  // 2) HORQUILLA JUGABLE (sin “embudo” imposible)
-  // Antes había dos bloques que casi cerraban el carril: ahora los separo y los hago más pequeños
-  // ==========================
-  [1600, 125, 160, 110], // isla superior derecha (más compacta)
-  [1780, 310, 120, 70],  // isla secundaria (más abajo y más pequeña)
-
-  // ==========================
-  // 3) RECTA DERECHA (pellizco suave)
-  // ==========================
-  [1860, 620, 110, 90],
-
-  // ==========================
-  // 4) ZONA ABAJO (ligera variación, no molesta)
-  // ==========================
-  [1080, 1160, 140, 70],
-]
-    ,
-
-  // Obstáculos inclinados (líneas) -> el loader los convierte en “escalera” de rectángulos
-  // Formato: [x1, y1, x2, y2, thickness, step]
-  // - thickness: grosor del muro (px)
-  // - step: distancia entre bloques (px). Menor = más suave, más coste.
-  slanted: [
-  // Arriba izquierda (↘)
-  [520, 170, 660, 300, 24, 16],
-
-  // Arriba centro (↗)
-  [860, 310, 1020, 230, 24, 16],
-
-  // Arriba derecha (↘)
-  [1230, 190, 1480, 300, 24, 16],
-
-  // Centro derecha (↗ corto)
-  [1460, 360, 1600, 300, 24, 16],
-
-  // Derecha vertical pronunciado (↗)
-  [1710, 430, 1880, 650, 24, 16],
-
-  // Abajo centro (↘ largo)
-  [1030, 1120, 1380, 1250, 24, 16],
+slanted: [
+  [1179, 107, 740, 225, 24, 16],
+  [1324, 110, 1930, 239, 24, 16],
+  [1020, 254, 1469, 357, 24, 16],
+  [2093, 258, 1859, 972, 24, 16],
+  [686, 1160, 1663, 1287, 24, 16],
 ]
 };

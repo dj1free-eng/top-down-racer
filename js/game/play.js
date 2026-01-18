@@ -280,7 +280,14 @@ if (btnClose) {
     // Pequeño tutorial en consola
     // eslint-disable-next-line no-console
     console.log('Controles: izq/der, acelerar/frenar (táctil). Teclado: flechas.');
-  }
+// Pequeño tutorial en consola
+// eslint-disable-next-line no-console
+console.log('Controles: izq/der, acelerar/frenar (táctil). Teclado: flechas.');
+
+// ⬇️ AÑADE ESTA LÍNEA
+this._enableIOSGameGuards();
+}
+  
 
   update(time, delta){
     const dt = delta / 1000;
@@ -428,6 +435,39 @@ this._currentS1 = null;
     // fade out cheaply
     this._skidG.alpha = Math.max(0.15, this._skidG.alpha - 0.0008);
   }
+// ===== iOS/Safari: evitar selección/gestos que “congelan” la pantalla =====
+_enableIOSGameGuards(){
+  // 1) Evitar selección de texto y menús (copiar/pegar)
+  document.body.style.webkitUserSelect = 'none';
+  document.body.style.userSelect = 'none';
+  document.body.style.webkitTouchCallout = 'none';
+
+  // 2) Evitar que el navegador interprete gestos (zoom/scroll) sobre el canvas
+  const canvas = this.game && this.game.canvas;
+  if (canvas) {
+    canvas.style.touchAction = 'none';
+    canvas.style.webkitTouchCallout = 'none';
+    canvas.style.webkitUserSelect = 'none';
+    canvas.style.userSelect = 'none';
+
+    // iOS a veces necesita preventDefault en touchmove para que no “arrastre” la página
+    const prevent = (e) => { e.preventDefault(); };
+    canvas.addEventListener('touchstart', prevent, { passive:false });
+    canvas.addEventListener('touchmove', prevent, { passive:false });
+    canvas.addEventListener('touchend', prevent, { passive:false });
+
+    // Guarda refs por si quieres desactivarlo en otra escena
+    this._iosPrevent = prevent;
+  }
+
+  // 3) Evitar “doble tap para zoom” en toda la página mientras juegas
+  // (solo en iOS Safari, pero no hace daño)
+  document.documentElement.style.touchAction = 'manipulation';
+}
+
+// Llamar al guard al final del create()
+this._enableIOSGameGuards();
+}
   // ===== Botón MAP (oculto) para exportar screenshot =====
   _ensureExportButton(){
     if (this._exportBtnEl) return;

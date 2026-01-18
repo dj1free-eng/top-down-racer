@@ -134,7 +134,9 @@ function distRGB(a,b){
 // --- View (pan/zoom) ---
 const viewport = document.getElementById('viewport');
 const stage = document.getElementById('stage');
-
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const resetViewBtn = document.getElementById('resetViewBtn');
 let view = { scale: 1, tx: 0, ty: 0 };
 let dragging = false;
 let last = { x: 0, y: 0 };
@@ -143,22 +145,51 @@ function applyView(){
   stage.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
 }
 
-function resetViewToFit(){
+function resetViewToFit(initialZoomFactor = 1.6){
   const vw = viewport.clientWidth;
   const vh = viewport.clientHeight;
+
+  // 1) Escala para encajar la imagen completa
   const sx = vw / c.width;
   const sy = vh / c.height;
+  const fit = Math.min(sx, sy);
 
-  view.scale = Math.min(sx, sy);
+  // 2) Arrancar un poco más grande que "fit"
+  view.scale = Math.min(4, fit * initialZoomFactor);
+
+  // 3) Centrar
   const contentW = c.width * view.scale;
   const contentH = c.height * view.scale;
-
   view.tx = (vw - contentW) / 2;
   view.ty = (vh - contentH) / 2;
 
   applyView();
 }
+function zoomBy(factor){
+  const vw = viewport.clientWidth;
+  const vh = viewport.clientHeight;
 
+  // Zoom alrededor del centro del visor
+  const cx = vw / 2;
+  const cy = vh / 2;
+
+  // Punto del canvas que estaba en el centro antes del zoom
+  const beforeX = (cx - view.tx) / view.scale;
+  const beforeY = (cy - view.ty) / view.scale;
+
+  // Cambiar escala
+  view.scale = Math.max(0.5, Math.min(4, view.scale * factor));
+
+  // Mantener ese punto en el centro
+  view.tx = cx - beforeX * view.scale;
+  view.ty = cy - beforeY * view.scale;
+
+  applyView();
+}
+
+zoomInBtn.addEventListener('click', ()=> zoomBy(1.25));
+zoomOutBtn.addEventListener('click', ()=> zoomBy(0.8));
+resetViewBtn.addEventListener('click', ()=> resetViewToFit(1.6));
 // Convierte un toque en el viewport a coordenadas reales del canvas (2200x1400)
 function normPos(e){
   const rect = viewport.getBoundingClientRect();
@@ -244,7 +275,11 @@ file.onchange = (ev)=>{
 
     setStatus(`Imagen cargada: ${im.naturalWidth}×${im.naturalHeight} (canvas 2200×1400)`, im.naturalWidth===2200 && im.naturalHeight===1400 ? 'ok':'warn');
     URL.revokeObjectURL(url);
-  resetViewToFit();
+  resetViewToFit(1.6);
+
+zoomOutBtn.disabled = false;
+zoomInBtn.disabled = false;
+resetViewBtn.disabled = false;
   };
   im.src = url;
 };

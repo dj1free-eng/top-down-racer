@@ -279,7 +279,7 @@ file.onchange = (ev)=>{
 
     setStatus(`Imagen cargada: ${im.naturalWidth}×${im.naturalHeight} (canvas 2200×1400)`, im.naturalWidth===2200 && im.naturalHeight===1400 ? 'ok':'warn');
     URL.revokeObjectURL(url);
-  resetViewToFit(1.6);
+  resetViewToFit(3);
 
 zoomOutBtn.disabled = false;
 zoomInBtn.disabled = false;

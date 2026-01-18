@@ -1,80 +1,181 @@
 <!doctype html>
-<html>
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Track Extractor (Top-Down Racer)</title>
   <style>
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;background:#0b0b0f;color:#fff}
-    header{position:sticky;top:0;background:rgba(11,11,15,.95);backdrop-filter:blur(8px);
-      padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12);z-index:10}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+      background:#0b0b0f;
+      color:#fff;
+    }
+    header{
+      position:sticky;
+      top:0;
+      background:rgba(11,11,15,.95);
+      backdrop-filter:blur(8px);
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      z-index:10;
+    }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     button,input{font:inherit}
-    button{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);
-      background:rgba(255,255,255,.08);color:#fff;font-weight:800}
+    button{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.2);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      font-weight:800
+    }
     button:disabled{opacity:.5}
     .hint{opacity:.75;font-size:13px}
-#wrap{padding:12px}
-
-/* Viewport con pan/zoom */
-#viewport{
-  width:100%;
-  height:60vh;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  background:#070913;
-  overflow:hidden;
-  touch-action:none; /* clave: pan controlado */
-  position:relative;
-}
-#stage{
-  position:absolute;
-  left:0; top:0;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-
-/* canvas dentro del stage */
-canvas{
-  display:block;
-  border:none;
-  max-width:none; /* importante: no “auto-fit” aquí */
-  height:auto;
-}
-    canvas{max-width:100%;height:auto;border-radius:12px;border:1px solid rgba(255,255,255,.12);touch-action:none}
-    textarea{width:100%;min-height:220px;margin-top:10px;background:#070913;color:#e8ecff;
-      border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;box-sizing:border-box}
-    .pill{padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.18);opacity:.85}
+    .pill{
+      padding:4px 8px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);opacity:.9
+    }
     .ok{color:#47ffb8}
     .warn{color:#ffd36a}
+
+    textarea{
+      width:100%;
+      min-height:220px;
+      margin-top:10px;
+      background:#070913;
+      color:#e8ecff;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:12px;
+      padding:10px;
+      box-sizing:border-box;
+    }
+
+    #wrap{padding:12px; overflow:hidden}
+
+    /* Viewport grande */
+    #viewport{
+      width:100%;
+      height: calc(100vh - 290px);
+      min-height: 55vh;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#070913;
+      overflow:hidden;
+      touch-action:none;
+      position:relative;
+    }
+    #stage{
+      position:absolute;
+      left:0; top:0;
+      transform-origin:0 0;
+      will-change:transform;
+    }
+    canvas{
+      display:block;
+      border:none;
+      max-width:none;
+      height:auto;
+    }
+
+    /* Herramientas flotantes */
+    #floatingTools{
+      position:absolute;
+      right:12px;
+      bottom:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:20;
+      pointer-events:auto;
+    }
+    #floatingTools button{
+      width:54px;
+      height:54px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(0,0,0,.55);
+      color:#fff;
+      font-weight:900;
+      font-size:22px;
+      line-height:1;
+      padding:0;
+    }
+
+    /* Mira tipo Photoshop */
+    #crosshair{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:46px;
+      height:46px;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+      z-index:30;
+      opacity:.95;
+    }
+    #crosshair .v{
+      position:absolute; left:50%; top:0;
+      width:2px; height:100%;
+      transform:translateX(-50%);
+      background:rgba(255,255,255,.85);
+      box-shadow:0 0 0 1px rgba(0,0,0,.35);
+    }
+    #crosshair .h{
+      position:absolute; top:50%; left:0;
+      height:2px; width:100%;
+      transform:translateY(-50%);
+      background:rgba(255,255,255,.85);
+      box-shadow:0 0 0 1px rgba(0,0,0,.35);
+    }
+    #crosshair .dot{
+      position:absolute; left:50%; top:50%;
+      width:7px; height:7px;
+      transform:translate(-50%,-50%);
+      border-radius:50%;
+      background:#47ffb8;
+      box-shadow:0 0 0 2px rgba(0,0,0,.45);
+    }
   </style>
 </head>
 <body>
+
 <header>
   <div class="row">
     <input type="file" id="file" accept="image/*">
-    <button id="pick" disabled>1) Elegir color obstáculo</button>
+    <button id="pick" disabled>1) Activar PICK 🎯</button>
     <button id="run" disabled>2) Extraer</button>
     <button id="copy" disabled>Copiar JSON</button>
     <span class="pill" id="status">Carga una imagen 2200×1400</span>
   </div>
-  <div class="hint">
-    Flujo: carga imagen → pulsa “Elegir color” y toca un obstáculo marrón → “Extraer”.
-    Ajusta tolerancia si detecta de más o de menos.
+
+  <div class="hint" style="margin-top:6px">
+    Flujo recomendado (móvil): carga imagen → pan/zoom hasta poner un obstáculo bajo la mira → pulsa 🎯 → pulsa “Extraer”.
+    El botón “Activar PICK 🎯” solo indica que vas a muestrear color en el centro.
   </div>
-  <div class="row" style="margin-top:8px">
-    <label class="hint">Tolerancia color: <input id="tol" type="range" min="10" max="120" value="55"></label>
-    <label class="hint">Min área bloque: <input id="minArea" type="number" value="250" style="width:90px"></label>
-    <label class="hint">Clasificar “slanted” por ratio: <input id="ratio" type="number" value="3.0" step="0.1" style="width:80px"></label>
-    <label class="hint">Thickness slanted: <input id="thick" type="number" value="24" style="width:70px"></label>
-    <label class="hint">Step slanted: <input id="step" type="number" value="16" style="width:70px"></label>
+
+  <div class="row" style="margin-top:10px">
+    <label class="hint">Tolerancia color:
+      <input id="tol" type="range" min="10" max="120" value="55">
+    </label>
+
+    <label class="hint">Min área bloque:
+      <input id="minArea" type="number" value="250" style="width:90px">
+    </label>
+
+    <label class="hint">Clasificar “slanted” por ratio:
+      <input id="ratio" type="number" value="3.0" step="0.1" style="width:80px">
+    </label>
+
+    <label class="hint">Thickness slanted:
+      <input id="thick" type="number" value="24" style="width:70px">
+    </label>
+
+    <label class="hint">Step slanted:
+      <input id="step" type="number" value="16" style="width:70px">
+    </label>
   </div>
- <div class="row" style="margin-top:8px">
-  <button id="zoomOutBtn" disabled>- Zoom</button>
-  <button id="zoomInBtn" disabled>+ Zoom</button>
-  <button id="resetViewBtn" disabled>Encajar</button>
-  <span class="hint">Usa + Zoom para trabajar cómodo en móvil.</span>
-</div> 
+
   <textarea id="out" spellcheck="false" placeholder="Aquí saldrá obstacles: [...] y slanted: [...]"></textarea>
 </header>
 
@@ -83,413 +184,397 @@ canvas{
     <div id="stage">
       <canvas id="c" width="2200" height="1400"></canvas>
     </div>
+
+    <div id="crosshair" aria-hidden="true">
+      <div class="v"></div>
+      <div class="h"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div id="floatingTools">
+      <button id="zPlus" title="Zoom +">+</button>
+      <button id="zMinus" title="Zoom -">−</button>
+      <button id="zFit" title="Encajar">⤢</button>
+      <button id="pickCenter" title="Pick en centro">🎯</button>
+    </div>
   </div>
 </div>
 
 <script>
-const c = document.getElementById('c');
-const ctx = c.getContext('2d', { willReadFrequently:true });
-const out = document.getElementById('out');
-const statusEl = document.getElementById('status');
+  const c = document.getElementById('c');
+  const ctx = c.getContext('2d'); // más compatible
+  const out = document.getElementById('out');
+  const statusEl = document.getElementById('status');
 
-const file = document.getElementById('file');
-const pickBtn = document.getElementById('pick');
-const runBtn = document.getElementById('run');
-const copyBtn = document.getElementById('copy');
+  const file = document.getElementById('file');
+  const pickBtn = document.getElementById('pick');
+  const runBtn = document.getElementById('run');
+  const copyBtn = document.getElementById('copy');
 
-const tolEl = document.getElementById('tol');
-const minAreaEl = document.getElementById('minArea');
-const ratioEl = document.getElementById('ratio');
-const thickEl = document.getElementById('thick');
-const stepEl = document.getElementById('step');
+  const tolEl = document.getElementById('tol');
+  const minAreaEl = document.getElementById('minArea');
+  const ratioEl = document.getElementById('ratio');
+  const thickEl = document.getElementById('thick');
+  const stepEl = document.getElementById('step');
 
-let img = null;
-let picking = false;
-let target = null; // {r,g,b}
-let previewMask = null;
+  const viewport = document.getElementById('viewport');
+  const stage = document.getElementById('stage');
 
-function setStatus(text, cls){
-  statusEl.textContent = text;
-  statusEl.className = 'pill ' + (cls || '');
-}
+  const zPlus = document.getElementById('zPlus');
+  const zMinus = document.getElementById('zMinus');
+  const zFit = document.getElementById('zFit');
+  const pickCenterBtn = document.getElementById('pickCenter');
 
-function drawBase(){
-  ctx.clearRect(0,0,c.width,c.height);
-  if (img) ctx.drawImage(img, 0,0, c.width,c.height);
-  if (previewMask) {
-    ctx.putImageData(previewMask, 0, 0);
-  }
-}
+  let img = null;
+  let target = null; // {r,g,b}
+  let previewMask = null;
 
-function getPixel(x,y){
-  const d = ctx.getImageData(x,y,1,1).data;
-  return {r:d[0], g:d[1], b:d[2], a:d[3]};
-}
+  // Estado de vista (pan/zoom)
+  let view = { scale: 1, tx: 0, ty: 0 };
+  let dragging = false;
+  let last = { x: 0, y: 0 };
 
-function distRGB(a,b){
-  const dr=a.r-b.r, dg=a.g-b.g, db=a.b-b.b;
-  return Math.sqrt(dr*dr + dg*dg + db*db);
-}
+  // Estado de pick
+  let picking = false;
 
-// --- View (pan/zoom) ---
-const viewport = document.getElementById('viewport');
-const stage = document.getElementById('stage');
-const zoomOutBtn = document.getElementById('zoomOutBtn');
-const zoomInBtn = document.getElementById('zoomInBtn');
-const resetViewBtn = document.getElementById('resetViewBtn');
-let view = { scale: 1, tx: 0, ty: 0 };
-let dragging = false;
-let last = { x: 0, y: 0 };
-
-function applyView(){
-  stage.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
-}
-
-function resetViewToFit(initialZoomFactor = 1.6){
-  const vw = viewport.clientWidth;
-  const vh = viewport.clientHeight;
-
-  // 1) Escala para encajar la imagen completa
-  const sx = vw / c.width;
-  const sy = vh / c.height;
-  const fit = Math.min(sx, sy);
-
-  // 2) Arrancar un poco más grande que "fit"
-  view.scale = Math.min(4, fit * initialZoomFactor);
-
-  // 3) Centrar
-  const contentW = c.width * view.scale;
-  const contentH = c.height * view.scale;
-  view.tx = (vw - contentW) / 2;
-  view.ty = (vh - contentH) / 2;
-
-  applyView();
-}
-function zoomBy(factor){
-  const vw = viewport.clientWidth;
-  const vh = viewport.clientHeight;
-
-  // Zoom alrededor del centro del visor
-  const cx = vw / 2;
-  const cy = vh / 2;
-
-  // Punto del canvas que estaba en el centro antes del zoom
-  const beforeX = (cx - view.tx) / view.scale;
-  const beforeY = (cy - view.ty) / view.scale;
-
-  // Cambiar escala
-  view.scale = Math.max(0.5, Math.min(4, view.scale * factor));
-
-  // Mantener ese punto en el centro
-  view.tx = cx - beforeX * view.scale;
-  view.ty = cy - beforeY * view.scale;
-
-  applyView();
-}
-
-if (zoomInBtn && zoomOutBtn && resetViewBtn) {
-  zoomInBtn.addEventListener('click', ()=> zoomBy(1.25));
-  zoomOutBtn.addEventListener('click', ()=> zoomBy(0.8));
-  resetViewBtn.addEventListener('click', ()=> resetViewToFit(1.6));
-} else {
-  console.warn('Faltan botones de zoom en el DOM. Revisa ids: zoomOutBtn, zoomInBtn, resetViewBtn');
-}
-// Convierte un toque en el viewport a coordenadas reales del canvas (2200x1400)
-function normPos(e){
-  const rect = viewport.getBoundingClientRect();
-  const p = (e.touches && e.touches[0]) ? e.touches[0] : e;
-
-  const vx = (p.clientX - rect.left);
-  const vy = (p.clientY - rect.top);
-
-  const x = (vx - view.tx) / view.scale;
-  const y = (vy - view.ty) / view.scale;
-
-  return {
-    x: Math.max(0, Math.min(c.width - 1, Math.round(x))),
-    y: Math.max(0, Math.min(c.height - 1, Math.round(y)))
-  };
-}
-
-// Pan (arrastrar con 1 dedo)
-viewport.addEventListener('pointerdown', (e)=>{
-  if (!img) return;
-  dragging = true;
-  last.x = e.clientX;
-  last.y = e.clientY;
-  viewport.setPointerCapture(e.pointerId);
-  e.preventDefault();
-}, { passive:false });
-
-viewport.addEventListener('pointermove', (e)=>{
-  if (!dragging) return;
-  const dx = e.clientX - last.x;
-  const dy = e.clientY - last.y;
-  last.x = e.clientX;
-  last.y = e.clientY;
-  view.tx += dx;
-  view.ty += dy;
-  applyView();
-  e.preventDefault();
-}, { passive:false });
-
-viewport.addEventListener('pointerup', ()=> dragging = false);
-viewport.addEventListener('pointercancel', ()=> dragging = false);
-
-// Zoom con rueda (PC) + con 2 dedos en trackpad; en móvil usarás el slider nativo del navegador no,
-// así que te dejo botones luego si quieres, pero por ahora: doble tap NO.
-viewport.addEventListener('wheel', (e)=>{
-  if (!img) return;
-  e.preventDefault();
-
-  const delta = Math.sign(e.deltaY);
-  const factor = delta > 0 ? 0.9 : 1.1;
-  const newScale = Math.max(0.5, Math.min(4, view.scale * factor));
-
-  // zoom alrededor del centro del viewport
-  const rect = viewport.getBoundingClientRect();
-  const cx = rect.width / 2;
-  const cy = rect.height / 2;
-
-  const beforeX = (cx - view.tx) / view.scale;
-  const beforeY = (cy - view.ty) / view.scale;
-
-  view.scale = newScale;
-  view.tx = cx - beforeX * view.scale;
-  view.ty = cy - beforeY * view.scale;
-
-  applyView();
-}, { passive:false });
-
-file.onchange = (ev)=>{
-  const f = ev.target.files?.[0];
-  if (!f) return;
-  const url = URL.createObjectURL(f);
-  const im = new Image();
-  im.onload = ()=>{
-    img = im;
-    previewMask = null;
-    // dibujamos en 2200x1400; si la imagen es otra, se reescala al canvas
-    drawBase();
-
-    pickBtn.disabled = false;
-    runBtn.disabled = true;
-    copyBtn.disabled = true;
-    target = null;
-
-    setStatus(`Imagen cargada: ${im.naturalWidth}×${im.naturalHeight} (canvas 2200×1400)`, im.naturalWidth===2200 && im.naturalHeight===1400 ? 'ok':'warn');
-    URL.revokeObjectURL(url);
-  resetViewToFit(3);
-
-zoomOutBtn.disabled = false;
-zoomInBtn.disabled = false;
-resetViewBtn.disabled = false;
-  };
-  im.src = url;
-};
-
-pickBtn.onclick = ()=>{
-  if (!img) return;
-  picking = true;
-  previewMask = null;
-  drawBase();
-  setStatus('Toca/clic en un obstáculo marrón para muestrear color', 'warn');
-};
-
-viewport.addEventListener('pointerdown', (e)=>{
-  if (!img) return;
-  if (!picking) return;
-
-  const p = normPos(e);
-  const px = getPixel(p.x, p.y);
-  target = {r:px.r, g:px.g, b:px.b};
-
-  picking = false;
-  runBtn.disabled = false;
-  setStatus(`Color muestreado: rgb(${target.r},${target.g},${target.b}). Pulsa “Extraer”.`, 'ok');
-  e.preventDefault();
-}, { passive:false });
-
-copyBtn.onclick = async ()=>{
-  try { await navigator.clipboard.writeText(out.value); } catch(e){}
-};
-
-runBtn.onclick = ()=>{
-  if (!img || !target) return;
-  const tol = +tolEl.value;
-  const minArea = Math.max(1, +minAreaEl.value);
-  const ratioTh = Math.max(1.0, +ratioEl.value);
-  const thick = Math.max(4, +thickEl.value);
-  const step = Math.max(4, +stepEl.value);
-
-  const imgData = ctx.getImageData(0,0,c.width,c.height);
-  const data = imgData.data;
-  const W = c.width, H = c.height;
-
-  // Máscara binaria
-  const mask = new Uint8Array(W*H);
-  for (let y=0; y<H; y++){
-    for (let x=0; x<W; x++){
-      const i = (y*W + x) * 4;
-      const rgb = {r:data[i], g:data[i+1], b:data[i+2]};
-      mask[y*W + x] = distRGB(rgb, target) <= tol ? 1 : 0;
-    }
+  function setStatus(text, cls){
+    statusEl.textContent = text;
+    statusEl.className = 'pill ' + (cls || '');
   }
 
-  // BFS componentes conectados (4-neighborhood)
-  const visited = new Uint8Array(W*H);
-  const comps = [];
+  function applyView(){
+    stage.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
+  }
 
-  const qx = new Int32Array(W*H); // cola simple (sobre-dimensionada, ok local)
-  const qy = new Int32Array(W*H);
+  function resetViewToFit(initialZoomFactor = 2.0){
+    const vw = viewport.clientWidth;
+    const vh = viewport.clientHeight;
 
-  function pushComp(startIdx){
-    let head=0, tail=0;
+    const sx = vw / c.width;
+    const sy = vh / c.height;
+    const fit = Math.min(sx, sy);
 
-    const sx = startIdx % W;
-    const sy = (startIdx / W) | 0;
-    qx[tail]=sx; qy[tail]=sy; tail++;
-    visited[startIdx]=1;
+    view.scale = Math.max(0.5, Math.min(4, fit * initialZoomFactor));
 
-    let minX=sx, minY=sy, maxX=sx, maxY=sy;
-    let area=0;
+    const contentW = c.width * view.scale;
+    const contentH = c.height * view.scale;
+    view.tx = (vw - contentW) / 2;
+    view.ty = (vh - contentH) / 2;
 
-    // acumuladores para PCA básica (para slanted)
-    let sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
+    applyView();
+  }
 
-    while(head<tail){
-      const x=qx[head], y=qy[head]; head++;
-      const idx=y*W+x;
+  function zoomBy(factor){
+    const vw = viewport.clientWidth;
+    const vh = viewport.clientHeight;
+    const cx = vw / 2;
+    const cy = vh / 2;
 
-      area++;
-      if (x<minX) minX=x;
-      if (y<minY) minY=y;
-      if (x>maxX) maxX=x;
-      if (y>maxY) maxY=y;
+    const beforeX = (cx - view.tx) / view.scale;
+    const beforeY = (cy - view.ty) / view.scale;
 
-      sumX += x; sumY += y;
-      sumXX += x*x; sumYY += y*y; sumXY += x*y;
+    view.scale = Math.max(0.5, Math.min(4, view.scale * factor));
 
-      // vecinos 4
-      if (x>0){
-        const ni=idx-1;
-        if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x-1; qy[tail]=y; tail++; }
-      }
-      if (x<W-1){
-        const ni=idx+1;
-        if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x+1; qy[tail]=y; tail++; }
-      }
-      if (y>0){
-        const ni=idx-W;
-        if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x; qy[tail]=y-1; tail++; }
-      }
-      if (y<H-1){
-        const ni=idx+W;
-        if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x; qy[tail]=y+1; tail++; }
-      }
-    }
+    view.tx = cx - beforeX * view.scale;
+    view.ty = cy - beforeY * view.scale;
 
-    // filtra componentes muy pequeñas (ruido)
-    if (area < minArea) return;
+    applyView();
+  }
 
-    const bw = (maxX - minX + 1);
-    const bh = (maxY - minY + 1);
+  function drawBase(){
+    ctx.clearRect(0,0,c.width,c.height);
+    if (img) ctx.drawImage(img, 0,0, c.width,c.height);
+    if (previewMask) ctx.putImageData(previewMask, 0, 0);
+  }
 
-    // PCA direction (eigenvector de mayor varianza) aproximada
-    const n = area;
-    const mx = sumX / n;
-    const my = sumY / n;
-    const cxx = (sumXX / n) - mx*mx;
-    const cyy = (sumYY / n) - my*my;
-    const cxy = (sumXY / n) - mx*my;
+  function getPixel(x,y){
+    const d = ctx.getImageData(x,y,1,1).data;
+    return {r:d[0], g:d[1], b:d[2], a:d[3]};
+  }
 
-    // vector principal: (vx, vy)
-    // eigenvector para lambda_max de matriz 2x2
-    const tr = cxx + cyy;
-    const det = cxx*cyy - cxy*cxy;
-    const disc = Math.max(0, tr*tr - 4*det);
-    const lambda = (tr + Math.sqrt(disc)) / 2;
+  function getPixelFromViewportCenter(){
+    const cx = viewport.clientWidth / 2;
+    const cy = viewport.clientHeight / 2;
 
-    let vx = cxy;
-    let vy = (lambda - cxx);
-    const vlen = Math.hypot(vx,vy) || 1;
-    vx /= vlen; vy /= vlen;
+    const x = Math.max(0, Math.min(c.width - 1, Math.round((cx - view.tx) / view.scale)));
+    const y = Math.max(0, Math.min(c.height - 1, Math.round((cy - view.ty) / view.scale)));
 
-    // Proyecta extremos del bounding box sobre el eje (aprox) para endpoints
-    // Tomamos los 4 corners del bbox y elegimos min/max proyección
-    const corners = [
-      {x:minX, y:minY}, {x:maxX, y:minY},
-      {x:minX, y:maxY}, {x:maxX, y:maxY}
-    ];
-    let minP=Infinity, maxP=-Infinity, pMin=null, pMax=null;
-    for (const p of corners){
-      const proj = (p.x - mx)*vx + (p.y - my)*vy;
-      if (proj < minP){ minP=proj; pMin=p; }
-      if (proj > maxP){ maxP=proj; pMax=p; }
-    }
+    return { x, y, px: getPixel(x, y) };
+  }
 
-    comps.push({
-      minX, minY, maxX, maxY, area, bw, bh,
-      mx, my, vx, vy,
-      p1: {x:pMin.x, y:pMin.y},
-      p2: {x:pMax.x, y:pMax.y}
+  function distRGB(a,b){
+    const dr=a.r-b.r, dg=a.g-b.g, db=a.b-b.b;
+    return Math.sqrt(dr*dr + dg*dg + db*db);
+  }
+
+  // PAN: arrastrar
+  viewport.addEventListener('pointerdown', (e)=>{
+    if (!img) return;
+
+    // Si estabas en modo picking, NO arrastramos con ese toque (evita confusión)
+    if (picking) return;
+
+    dragging = true;
+    last.x = e.clientX;
+    last.y = e.clientY;
+    viewport.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }, { passive:false });
+
+  viewport.addEventListener('pointermove', (e)=>{
+    if (!dragging) return;
+    const dx = e.clientX - last.x;
+    const dy = e.clientY - last.y;
+    last.x = e.clientX;
+    last.y = e.clientY;
+    view.tx += dx;
+    view.ty += dy;
+    applyView();
+    e.preventDefault();
+  }, { passive:false });
+
+  viewport.addEventListener('pointerup', ()=> dragging = false);
+  viewport.addEventListener('pointercancel', ()=> dragging = false);
+
+  // Botones flotantes
+  if (zPlus)  zPlus.addEventListener('click', ()=> zoomBy(1.25));
+  if (zMinus) zMinus.addEventListener('click', ()=> zoomBy(0.8));
+  if (zFit)   zFit.addEventListener('click', ()=> resetViewToFit(2.0));
+
+  // Activar modo "pick"
+  pickBtn.addEventListener('click', ()=>{
+    if (!img) return;
+    picking = true;
+    setStatus('PICK activo: coloca el obstáculo bajo la mira y pulsa 🎯', 'warn');
+  });
+
+  // Pick preciso (centro)
+  if (pickCenterBtn) {
+    pickCenterBtn.addEventListener('click', ()=>{
+      if (!img) return;
+
+      const { x, y, px } = getPixelFromViewportCenter();
+      target = { r:px.r, g:px.g, b:px.b };
+
+      runBtn.disabled = false;
+      picking = false;
+
+      setStatus(`Color OK @(${x},${y}) = rgb(${target.r},${target.g},${target.b}). Pulsa “Extraer”.`, 'ok');
     });
   }
 
-  for (let i=0; i<W*H; i++){
-    if (mask[i] && !visited[i]) pushComp(i);
-  }
+  copyBtn.addEventListener('click', async ()=>{
+    try { await navigator.clipboard.writeText(out.value); } catch(e){}
+  });
 
-  // Clasificación
-  const obstacles = [];
-  const slanted = [];
+  // Carga imagen (DataURL, más compatible)
+  file.onchange = async (ev)=>{
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
 
-  for (const comp of comps){
-    const {minX,minY,bw,bh, p1,p2} = comp;
-    const aspect = Math.max(bw,bh) / Math.max(1, Math.min(bw,bh));
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise((resolve, reject) => {
+        reader.onerror = () => reject(new Error('FileReader error'));
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(f);
+      });
 
-    if (aspect >= ratioTh) {
-      // slanted: endpoints aproximados por PCA sobre bbox
-      slanted.push([p1.x, p1.y, p2.x, p2.y, thick, step]);
-    } else {
-      obstacles.push([minX, minY, bw, bh]);
+      const im = new Image();
+      im.onload = ()=>{
+        img = im;
+        previewMask = null;
+        target = null;
+        runBtn.disabled = true;
+        copyBtn.disabled = true;
+
+        drawBase();
+        resetViewToFit(2.0);
+
+        pickBtn.disabled = false;
+
+        const cls = (im.naturalWidth===2200 && im.naturalHeight===1400) ? 'ok' : 'warn';
+        setStatus(`Imagen cargada: ${im.naturalWidth}×${im.naturalHeight} (canvas 2200×1400)`, cls);
+      };
+      im.src = dataUrl;
+
+    } catch (err) {
+      console.error(err);
+      setStatus('Error cargando imagen. Prueba en Safari/Edge normal.', 'warn');
     }
-  }
+  };
 
-  // Preview: pinta bbox
-  const prev = ctx.getImageData(0,0,W,H);
-  const pd = prev.data;
-
-  function drawRect(x,y,w,h, r,g,b){
-    // borde simple
-    for (let xx=x; xx<x+w; xx++){
-      setPix(xx,y, r,g,b);
-      setPix(xx,y+h-1, r,g,b);
+  // EXTRACCIÓN
+  runBtn.addEventListener('click', ()=>{
+    if (!img || !target) {
+      setStatus('Primero muestrea color con 🎯 (centro).', 'warn');
+      return;
     }
-    for (let yy=y; yy<y+h; yy++){
-      setPix(x,yy, r,g,b);
-      setPix(x+w-1,yy, r,g,b);
+
+    const tol = +tolEl.value;
+    const minArea = Math.max(1, +minAreaEl.value);
+    const ratioTh = Math.max(1.0, +ratioEl.value);
+    const thick = Math.max(4, +thickEl.value);
+    const step = Math.max(4, +stepEl.value);
+
+    const imgData = ctx.getImageData(0,0,c.width,c.height);
+    const data = imgData.data;
+    const W = c.width, H = c.height;
+
+    // Máscara binaria
+    const mask = new Uint8Array(W*H);
+    for (let y=0; y<H; y++){
+      for (let x=0; x<W; x++){
+        const i = (y*W + x) * 4;
+        const rgb = {r:data[i], g:data[i+1], b:data[i+2]};
+        mask[y*W + x] = distRGB(rgb, target) <= tol ? 1 : 0;
+      }
     }
-  }
-  function setPix(x,y, r,g,b){
-    if (x<0||y<0||x>=W||y>=H) return;
-    const i=(y*W+x)*4;
-    pd[i]=r; pd[i+1]=g; pd[i+2]=b; pd[i+3]=255;
-  }
 
-  // Dibuja bounding boxes (amarillo para obstacles, cyan para slanted)
-  for (const [x,y,w,h] of obstacles) drawRect(x,y,w,h, 255,210,0);
-  for (const [x1,y1,x2,y2] of slanted) {
-    // bbox aproximado del slanted (solo para preview)
-    const minX=Math.min(x1,x2), minY=Math.min(y1,y2);
-    const maxX=Math.max(x1,x2), maxY=Math.max(y1,y2);
-    drawRect(minX,minY,maxX-minX+1,maxY-minY+1, 0,220,255);
-  }
+    // Componentes conectados (4 vecinos)
+    const visited = new Uint8Array(W*H);
+    const comps = [];
 
-  previewMask = prev;
-  drawBase();
+    const qx = new Int32Array(W*H);
+    const qy = new Int32Array(W*H);
 
-  out.value =
+    function pushComp(startIdx){
+      let head=0, tail=0;
+
+      const sx = startIdx % W;
+      const sy = (startIdx / W) | 0;
+      qx[tail]=sx; qy[tail]=sy; tail++;
+      visited[startIdx]=1;
+
+      let minX=sx, minY=sy, maxX=sx, maxY=sy;
+      let area=0;
+
+      // Acumuladores PCA
+      let sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
+
+      while(head<tail){
+        const x=qx[head], y=qy[head]; head++;
+        const idx=y*W+x;
+
+        area++;
+        if (x<minX) minX=x;
+        if (y<minY) minY=y;
+        if (x>maxX) maxX=x;
+        if (y>maxY) maxY=y;
+
+        sumX += x; sumY += y;
+        sumXX += x*x; sumYY += y*y; sumXY += x*y;
+
+        // vecinos
+        if (x>0){
+          const ni=idx-1;
+          if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x-1; qy[tail]=y; tail++; }
+        }
+        if (x<W-1){
+          const ni=idx+1;
+          if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x+1; qy[tail]=y; tail++; }
+        }
+        if (y>0){
+          const ni=idx-W;
+          if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x; qy[tail]=y-1; tail++; }
+        }
+        if (y<H-1){
+          const ni=idx+W;
+          if (!visited[ni] && mask[ni]) { visited[ni]=1; qx[tail]=x; qy[tail]=y+1; tail++; }
+        }
+      }
+
+      if (area < minArea) return;
+
+      const bw = (maxX - minX + 1);
+      const bh = (maxY - minY + 1);
+
+      // PCA direction aproximada
+      const n = area;
+      const mx = sumX / n;
+      const my = sumY / n;
+      const cxx = (sumXX / n) - mx*mx;
+      const cyy = (sumYY / n) - my*my;
+      const cxy = (sumXY / n) - mx*my;
+
+      const tr = cxx + cyy;
+      const det = cxx*cyy - cxy*cxy;
+      const disc = Math.max(0, tr*tr - 4*det);
+      const lambda = (tr + Math.sqrt(disc)) / 2;
+
+      let vx = cxy;
+      let vy = (lambda - cxx);
+      const vlen = Math.hypot(vx,vy) || 1;
+      vx /= vlen; vy /= vlen;
+
+      // Endpoints aproximados: corners del bbox proyectados
+      const corners = [
+        {x:minX, y:minY}, {x:maxX, y:minY},
+        {x:minX, y:maxY}, {x:maxX, y:maxY}
+      ];
+      let minP=Infinity, maxP=-Infinity, pMin=null, pMax=null;
+      for (const p of corners){
+        const proj = (p.x - mx)*vx + (p.y - my)*vy;
+        if (proj < minP){ minP=proj; pMin=p; }
+        if (proj > maxP){ maxP=proj; pMax=p; }
+      }
+
+      comps.push({
+        minX, minY, maxX, maxY, area, bw, bh,
+        p1: {x:pMin.x, y:pMin.y},
+        p2: {x:pMax.x, y:pMax.y}
+      });
+    }
+
+    for (let i=0; i<W*H; i++){
+      if (mask[i] && !visited[i]) pushComp(i);
+    }
+
+    const obstacles = [];
+    const slanted = [];
+
+    for (const comp of comps){
+      const {minX,minY,bw,bh,p1,p2} = comp;
+      const aspect = Math.max(bw,bh) / Math.max(1, Math.min(bw,bh));
+
+      if (aspect >= ratioTh) {
+        slanted.push([p1.x, p1.y, p2.x, p2.y, thick, step]);
+      } else {
+        obstacles.push([minX, minY, bw, bh]);
+      }
+    }
+
+    // Preview: dibuja bboxes
+    const prev = ctx.getImageData(0,0,W,H);
+    const pd = prev.data;
+
+    function setPix(x,y, r,g,b){
+      if (x<0||y<0||x>=W||y>=H) return;
+      const i=(y*W+x)*4;
+      pd[i]=r; pd[i+1]=g; pd[i+2]=b; pd[i+3]=255;
+    }
+    function drawRect(x,y,w,h, r,g,b){
+      for (let xx=x; xx<x+w; xx++){
+        setPix(xx,y, r,g,b);
+        setPix(xx,y+h-1, r,g,b);
+      }
+      for (let yy=y; yy<y+h; yy++){
+        setPix(x,yy, r,g,b);
+        setPix(x+w-1,yy, r,g,b);
+      }
+    }
+
+    for (const [x,y,w,h] of obstacles) drawRect(x,y,w,h, 255,210,0);
+    for (const [x1,y1,x2,y2] of slanted) {
+      const minX=Math.min(x1,x2), minY=Math.min(y1,y2);
+      const maxX=Math.max(x1,x2), maxY=Math.max(y1,y2);
+      drawRect(minX,minY,maxX-minX+1,maxY-minY+1, 0,220,255);
+    }
+
+    previewMask = prev;
+    drawBase();
+
+    out.value =
 `obstacles: [
 ${obstacles.map(r=>`  [${r[0]}, ${r[1]}, ${r[2]}, ${r[3]}],`).join('\n')}
 ],
@@ -498,9 +583,10 @@ slanted: [
 ${slanted.map(s=>`  [${s[0]}, ${s[1]}, ${s[2]}, ${s[3]}, ${s[4]}, ${s[5]}],`).join('\n')}
 ]`;
 
-  copyBtn.disabled = false;
-  setStatus(`Extraído: obstacles=${obstacles.length}, slanted=${slanted.length}. Ajusta tolerancia/minArea si hace falta.`, 'ok');
-};
+    copyBtn.disabled = false;
+    setStatus(`Extraído: obstacles=${obstacles.length}, slanted=${slanted.length}.`, 'ok');
+  });
 </script>
+
 </body>
 </html>

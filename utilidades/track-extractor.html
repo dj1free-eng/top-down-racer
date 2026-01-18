@@ -187,9 +187,13 @@ function zoomBy(factor){
   applyView();
 }
 
-zoomInBtn.addEventListener('click', ()=> zoomBy(1.25));
-zoomOutBtn.addEventListener('click', ()=> zoomBy(0.8));
-resetViewBtn.addEventListener('click', ()=> resetViewToFit(1.6));
+if (zoomInBtn && zoomOutBtn && resetViewBtn) {
+  zoomInBtn.addEventListener('click', ()=> zoomBy(1.25));
+  zoomOutBtn.addEventListener('click', ()=> zoomBy(0.8));
+  resetViewBtn.addEventListener('click', ()=> resetViewToFit(1.6));
+} else {
+  console.warn('Faltan botones de zoom en el DOM. Revisa ids: zoomOutBtn, zoomInBtn, resetViewBtn');
+}
 // Convierte un toque en el viewport a coordenadas reales del canvas (2200x1400)
 function normPos(e){
   const rect = viewport.getBoundingClientRect();

@@ -521,3 +521,4 @@ this._currentS1 = null;
       });
     });
   }
+}

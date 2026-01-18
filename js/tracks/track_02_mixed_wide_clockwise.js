@@ -55,4 +55,14 @@ export const track02 = {
   // ==========================
   [1080, 1160, 140, 70],
 ]
+    ,
+
+  // Obstáculos inclinados (líneas) -> el loader los convierte en “escalera” de rectángulos
+  // Formato: [x1, y1, x2, y2, thickness, step]
+  // - thickness: grosor del muro (px)
+  // - step: distancia entre bloques (px). Menor = más suave, más coste.
+  slanted: [
+    // Ejemplo (BORRA o edita):
+    // [600, 240, 820, 380, 24, 16],
+  ]
 };

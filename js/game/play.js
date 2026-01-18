@@ -483,49 +483,37 @@ this._currentS1 = null;
     if (visible) this._exportBtnEl.classList.remove('hidden');
     else this._exportBtnEl.classList.add('hidden');
   }
-  // ===== Exportar “foto” del mapa completo (PNG) =====
-  _dumpMapScreenshot(){
-    const cam = this.cameras.main;
+// ===== Exportar “foto” del mapa completo (PNG) =====
+_dumpMapScreenshot(){
+  const cam = this.cameras.main;
 
-    // Guardar estado actual
-    const prevFollow = cam._follow;
-    const prevZoom = cam.zoom;
+  // Guardar estado actual
+  const prevScrollX = cam.scrollX;
+  const prevScrollY = cam.scrollY;
+  const prevZoom = cam.zoom;
+  const wasFollowing = !!cam._follow;
 
-    // Ajustar cámara al mundo completo
-    cam.stopFollow();
-    cam.setZoom(1);
-    cam.setScroll(0, 0);
+  // Ajustar cámara al mundo (SIN cambiar tamaño)
+  cam.stopFollow();
+  cam.setZoom(1);
+  cam.setScroll(0, 0);
 
-    // IMPORTANTE: poner la cámara al tamaño del mundo para capturarlo entero
-    cam.setSize(this.worldW, this.worldH);
-
+  // Esperar un frame para que Phaser renderice bien
+  this.time.delayedCall(0, () => {
     cam.snapshot((image) => {
-  // iOS Safari NO permite descarga directa:
-  // abrimos la imagen en una nueva pestaña
-  const dataUrl = image.src;
+      // iOS SAFE: abrir imagen en nueva pestaña
+      const win = window.open();
+      if (win) {
+        win.document.write(
+          `<title>Mapa</title>
+           <img src="${image.src}" style="width:100%;height:auto"/>`
+        );
+      }
 
-  const w = window.open();
-  if (w) {
-    w.document.write(`
-      <html>
-        <head>
-          <title>Track snapshot</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-        </head>
-        <body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;">
-          <img src="${dataUrl}" style="max-width:100%;height:auto;" />
-          <p style="position:fixed;bottom:10px;color:#fff;font-family:sans-serif;font-size:12px;">
-            Mantén pulsado la imagen y selecciona “Guardar”
-          </p>
-        </body>
-      </html>
-    `);
-  }
-
-  // Restaurar cámara
-  cam.setSize(this.scale.width, this.scale.height);
-  cam.setZoom(prevZoom);
-  if (prevFollow) cam.startFollow(this.car);
-});
-  }
+      // Restaurar cámara EXACTAMENTE como estaba
+      cam.setZoom(prevZoom);
+      cam.setScroll(prevScrollX, prevScrollY);
+      if (wasFollowing) cam.startFollow(this.car);
+    });
+  });
 }

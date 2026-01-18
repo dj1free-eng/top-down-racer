@@ -250,19 +250,19 @@ pickBtn.onclick = ()=>{
   setStatus('Toca/clic en un obstáculo marrón para muestrear color', 'warn');
 };
 
-c.addEventListener('pointerdown', (e)=>{
+viewport.addEventListener('pointerdown', (e)=>{
   if (!img) return;
-  const p = normPos(e);
+  if (!picking) return;
 
-  if (picking) {
-    const px = getPixel(p.x, p.y);
-    target = {r:px.r, g:px.g, b:px.b};
-    picking = false;
-    runBtn.disabled = false;
-    setStatus(`Color muestreado: rgb(${target.r},${target.g},${target.b}). Pulsa “Extraer”.`, 'ok');
-    return;
-  }
-});
+  const p = normPos(e);
+  const px = getPixel(p.x, p.y);
+  target = {r:px.r, g:px.g, b:px.b};
+
+  picking = false;
+  runBtn.disabled = false;
+  setStatus(`Color muestreado: rgb(${target.r},${target.g},${target.b}). Pulsa “Extraer”.`, 'ok');
+  e.preventDefault();
+}, { passive:false });
 
 copyBtn.onclick = async ()=>{
   try { await navigator.clipboard.writeText(out.value); } catch(e){}

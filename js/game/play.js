@@ -500,15 +500,32 @@ this._currentS1 = null;
     cam.setSize(this.worldW, this.worldH);
 
     cam.snapshot((image) => {
-      const a = document.createElement('a');
-      a.href = image.src;
-      a.download = 'track_debug.png';
-      a.click();
+  // iOS Safari NO permite descarga directa:
+  // abrimos la imagen en una nueva pestaña
+  const dataUrl = image.src;
 
-      // Restaurar cámara a tamaño pantalla
-      cam.setSize(this.scale.width, this.scale.height);
-      cam.setZoom(prevZoom);
-      if (prevFollow) cam.startFollow(this.car);
-    });
+  const w = window.open();
+  if (w) {
+    w.document.write(`
+      <html>
+        <head>
+          <title>Track snapshot</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;">
+          <img src="${dataUrl}" style="max-width:100%;height:auto;" />
+          <p style="position:fixed;bottom:10px;color:#fff;font-family:sans-serif;font-size:12px;">
+            Mantén pulsado la imagen y selecciona “Guardar”
+          </p>
+        </body>
+      </html>
+    `);
+  }
+
+  // Restaurar cámara
+  cam.setSize(this.scale.width, this.scale.height);
+  cam.setZoom(prevZoom);
+  if (prevFollow) cam.startFollow(this.car);
+});
   }
 }

@@ -4,7 +4,8 @@ import { setHud } from './ui.js';
 
 import { track01 } from '../tracks/track_01_basic_speed.js';
 import { track02 } from '../tracks/track_02_mixed_wide_clockwise.js';
-import { buildTrack } from '../tracks/trackLoader.js';export default class PlayScene extends Phaser.Scene {
+import { buildTrack } from '../tracks/trackLoader.js';
+export default class PlayScene extends Phaser.Scene {
   constructor(){ super('play'); }
 
   create(){
@@ -250,6 +251,9 @@ if (timeEl) {
   timeEl.addEventListener('touchstart', tap, { passive: false });
   timeEl.addEventListener('pointerdown', tap, { passive: false }); // backup
 }
+    // Inicializar botón MAP oculto (debug)
+this._ensureExportButton();
+this._setExportVisible(false);
     const btnRestart = document.getElementById('btnRestart');
 if (btnRestart) {
   btnRestart.addEventListener('pointerdown', (e)=>{
@@ -422,7 +426,60 @@ this._currentS1 = null;
     // fade out cheaply
     this._skidG.alpha = Math.max(0.15, this._skidG.alpha - 0.0008);
   }
+  // ===== Botón MAP (oculto) para exportar screenshot =====
+  _ensureExportButton(){
+    if (this._exportBtnEl) return;
 
+    const btn = document.createElement('button');
+    btn.textContent = 'MAP';
+    btn.id = 'btnMapExport';
+
+    // Estilo fijo arriba a la derecha (por encima de todo)
+    btn.style.position = 'fixed';
+    btn.style.top = '14px';
+    btn.style.right = '14px';
+    btn.style.zIndex = '999999';
+    btn.style.padding = '10px 12px';
+    btn.style.borderRadius = '12px';
+    btn.style.border = '1px solid rgba(255,255,255,0.25)';
+    btn.style.background = 'rgba(0,0,0,0.55)';
+    btn.style.color = '#fff';
+    btn.style.fontWeight = '700';
+    btn.style.letterSpacing = '0.5px';
+
+    // MUY IMPORTANTE para iOS (no zoom / no selección)
+    btn.style.webkitUserSelect = 'none';
+    btn.style.userSelect = 'none';
+    btn.style.webkitTouchCallout = 'none';
+    btn.style.touchAction = 'manipulation';
+
+    btn.classList.add('hidden'); // empieza oculto (tu CSS ya tiene .hidden)
+
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._dumpMapScreenshot();
+      this._setExportVisible(false);
+    }, { passive:false });
+
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._dumpMapScreenshot();
+      this._setExportVisible(false);
+    }, { passive:false });
+
+    document.body.appendChild(btn);
+    this._exportBtnEl = btn;
+  }
+
+  _setExportVisible(visible){
+    this._ensureExportButton();
+    if (!this._exportBtnEl) return;
+
+    if (visible) this._exportBtnEl.classList.remove('hidden');
+    else this._exportBtnEl.classList.add('hidden');
+  }
   // ===== Exportar “foto” del mapa completo (PNG) =====
   _dumpMapScreenshot(){
     const cam = this.cameras.main;

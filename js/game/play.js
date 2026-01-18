@@ -662,24 +662,92 @@ _renderWorldInto(rt){
   bar.style.fontFamily = 'system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif';
   bar.style.color = '#fff';
 
-  const title = document.createElement('div');
-  title.textContent = 'Mapa completo';
-  title.style.fontWeight = '800';
+const actions = document.createElement('div');
+actions.style.display = 'flex';
+actions.style.gap = '10px';
+actions.style.alignItems = 'center';
 
-  const close = document.createElement('button');
-  close.textContent = 'Cerrar';
-  close.style.padding = '10px 12px';
-  close.style.borderRadius = '10px';
-  close.style.border = '1px solid rgba(255,255,255,0.25)';
-  close.style.background = 'rgba(255,255,255,0.08)';
-  close.style.color = '#fff';
-  close.style.fontWeight = '800';
-  close.style.touchAction = 'manipulation';
-  close.addEventListener('touchstart', (e)=>{ e.preventDefault(); this._hideMapOverlay(); }, { passive:false });
-  close.addEventListener('pointerdown', (e)=>{ e.preventDefault(); this._hideMapOverlay(); }, { passive:false });
+const btnOpen = document.createElement('button');
+btnOpen.textContent = 'Abrir';
+btnOpen.style.padding = '10px 12px';
+btnOpen.style.borderRadius = '10px';
+btnOpen.style.border = '1px solid rgba(255,255,255,0.25)';
+btnOpen.style.background = 'rgba(255,255,255,0.08)';
+btnOpen.style.color = '#fff';
+btnOpen.style.fontWeight = '800';
+btnOpen.style.touchAction = 'manipulation';
+btnOpen.disabled = true;
 
-  bar.appendChild(title);
-  bar.appendChild(close);
+const btnShare = document.createElement('button');
+btnShare.textContent = 'Compartir';
+btnShare.style.padding = '10px 12px';
+btnShare.style.borderRadius = '10px';
+btnShare.style.border = '1px solid rgba(255,255,255,0.25)';
+btnShare.style.background = 'rgba(255,255,255,0.08)';
+btnShare.style.color = '#fff';
+btnShare.style.fontWeight = '800';
+btnShare.style.touchAction = 'manipulation';
+btnShare.disabled = true;
+
+const close = document.createElement('button');
+close.textContent = 'Cerrar';
+close.style.padding = '10px 12px';
+close.style.borderRadius = '10px';
+close.style.border = '1px solid rgba(255,255,255,0.25)';
+close.style.background = 'rgba(255,255,255,0.08)';
+close.style.color = '#fff';
+close.style.fontWeight = '800';
+close.style.touchAction = 'manipulation';
+
+close.addEventListener('touchstart', (e)=>{ e.preventDefault(); this._hideMapOverlay(); }, { passive:false });
+close.addEventListener('pointerdown', (e)=>{ e.preventDefault(); this._hideMapOverlay(); }, { passive:false });
+
+// Abrir: abre el PNG en otra pestaña (y ahí ya puedes Guardar imagen)
+const openImg = (e) => {
+  e.preventDefault();
+  if (!this._mapLastDataUrl) return;
+  window.open(this._mapLastDataUrl, '_blank');
+};
+btnOpen.addEventListener('touchstart', openImg, { passive:false });
+btnOpen.addEventListener('pointerdown', openImg, { passive:false });
+
+// Compartir: Share Sheet (Fotos/Archivos/Apps)
+const shareImg = async (e) => {
+  e.preventDefault();
+  if (!this._mapLastDataUrl) return;
+
+  try {
+    const res = await fetch(this._mapLastDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'mapa.png', { type: 'image/png' });
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Mapa', text: 'Mapa completo' });
+    } else if (navigator.share) {
+      // fallback: comparte como enlace dataURL (no ideal, pero mejor que nada)
+      await navigator.share({ url: this._mapLastDataUrl, title: 'Mapa' });
+    } else {
+      // último recurso: abrir en pestaña
+      window.open(this._mapLastDataUrl, '_blank');
+    }
+  } catch (err) {
+    // si algo falla, al menos abre la imagen
+    window.open(this._mapLastDataUrl, '_blank');
+  }
+};
+btnShare.addEventListener('touchstart', shareImg, { passive:false });
+btnShare.addEventListener('pointerdown', shareImg, { passive:false });
+
+actions.appendChild(btnOpen);
+actions.appendChild(btnShare);
+actions.appendChild(close);
+
+bar.appendChild(title);
+bar.appendChild(actions);
+
+// Guardamos refs
+this._mapOverlayOpenBtnEl = btnOpen;
+this._mapOverlayShareBtnEl = btnShare;
 
   const body = document.createElement('div');
   body.style.flex = '1';

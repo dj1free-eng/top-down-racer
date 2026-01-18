@@ -14,9 +14,8 @@ export default class PlayScene extends Phaser.Scene {
     this.worldH = 1400;
     this.physics.world.setBounds(0,0,this.worldW,this.worldH);
 
-    // Fondo asfalto (tileSprite)
-    const bg = this.add.tileSprite(0,0,this.worldW,this.worldH,'asphalt').setOrigin(0);
-
+// Fondo asfalto (tileSprite)
+this.bg = this.add.tileSprite(0,0,this.worldW,this.worldH,'asphalt').setOrigin(0);
     // Bordes (colliders invisibles) + un circuito simple tipo "óvalo" con paredes
     this.walls = this.physics.add.staticGroup();
 
@@ -487,18 +486,12 @@ this._currentS1 = null;
 // ===== Exportar “foto” del mapa completo (PNG) =====
 // Objetivo: capturar worldW x worldH SIN tocar scroll/zoom/follow de la cámara del jugador.
 _dumpMapScreenshot(){
-  // Abrir ventana DURANTE el gesto (iOS-safe). Si iOS bloquea popups,
-  // esto asegura que la pestaña ya exista antes del snapshot async.
+  // Abrir ventana DURANTE el gesto (iOS-safe)
   const win = window.open('', '_blank');
 
-  // 1) Crear / reutilizar un RenderTexture del tamaño del mundo
   const rt = this._getMapRenderTexture();
-
-  // 2) Renderizar el mundo entero dentro del RT (sin mover la cámara)
   this._renderWorldInto(rt);
 
-  // 3) Snapshot del RT -> dataURL (PNG)
-  // Nota: snapshot es async; por eso la ventana se abre antes.
   rt.snapshot((image) => {
     if (!win) return;
 
@@ -515,7 +508,7 @@ _dumpMapScreenshot(){
       </style>
       <header>
         <div><strong>Mapa completo</strong> <span class="hint">(${this.worldW}×${this.worldH})</span></div>
-        <div class="hint">Consejo: mantén pulsado sobre la imagen para “Guardar en Fotos”.</div>
+        <div class="hint">Mantén pulsado sobre la imagen para “Guardar en Fotos”.</div>
         <div style="margin-top:6px"><a href="${image.src}" download="mapa.png">Descargar PNG</a></div>
       </header>
       <img src="${image.src}" alt="Mapa completo" />
@@ -524,45 +517,60 @@ _dumpMapScreenshot(){
   });
 }
 
-// RenderTexture “offscreen” para componer el mapa completo
 _getMapRenderTexture(){
-  // Reutiliza si ya existe y coincide el tamaño
   if (this._mapRT && this._mapRT.width === this.worldW && this._mapRT.height === this.worldH) {
     return this._mapRT;
   }
-
-  // Si existía pero con otro tamaño, destruye limpio
   if (this._mapRT) {
     this._mapRT.destroy();
     this._mapRT = null;
   }
 
-  // Importante: origin(0) para que el (0,0) del mundo sea (0,0) del RT
   const rt = this.add.renderTexture(0, 0, this.worldW, this.worldH).setOrigin(0);
-
-  // No queremos que “ensucie” la escena: lo ocultamos (igual se puede dibujar y snapshotear)
   rt.setVisible(false);
-
   this._mapRT = rt;
   return rt;
 }
 
-// Dibuja los objetos del mundo dentro del RenderTexture, sin tocar la cámara principal
 _renderWorldInto(rt){
   rt.clear();
 
-  // Dibujamos TODOS los children del display list, excepto el propio RT.
-  // Esto incluye: bg tileSprite, muros, líneas, coche, etc.
-  // Si luego quieres excluir el coche del mapa, lo filtramos aquí.
-  const list = this.children.list.filter(go => {
-    if (!go || go === rt) return false;
-    if (go.visible === false) return false;
-    if (go.alpha !== undefined && go.alpha <= 0) return false;
-    return true;
-  });
+  // 1) Fondo: rellenar el mundo con la textura 'asphalt' de forma estable
+  // (evita depender del tileSprite al dibujar en RenderTexture)
+  const texKey = 'asphalt';
 
-  // RenderTexture.draw respeta posiciones en coordenadas de mundo (x,y) de cada GO.
-  // Como el RT está en (0,0) y tiene tamaño world, el mundo cae “a escala 1:1”.
-  rt.draw(list);
+  // Si tu textura tiene un frame concreto, normalmente es __BASE o null.
+  // Usamos drawFrame con frame undefined para el frame por defecto.
+  const frame = undefined;
+
+  // Tamaño del frame (necesario para tilear bien)
+  const tx = this.textures.get(texKey);
+  const fr = tx?.get(frame) || tx?.get('__BASE');
+  const fw = fr?.width || 64;
+  const fh = fr?.height || 64;
+
+  for (let y = 0; y < this.worldH; y += fh) {
+    for (let x = 0; x < this.worldW; x += fw) {
+      rt.drawFrame(texKey, frame, x, y);
+    }
+  }
+
+  // 2) Muros del circuito (los crea buildTrack y/o tus rectángulos)
+  if (this.walls && this.walls.getChildren) {
+    const walls = this.walls.getChildren();
+    for (let i = 0; i < walls.length; i++) {
+      rt.draw(walls[i]);
+    }
+  }
+
+  // 3) Elementos clave visibles del circuito
+  if (this.finishLine) rt.draw(this.finishLine);
+  if (this.checkpointLine) rt.draw(this.checkpointLine);
+
+  // 4) Coche (opcional en el mapa; si no lo quieres, comenta esta línea)
+  if (this.car) rt.draw(this.car);
+
+  // 5) Marcas de derrape (Graphics). Si te dieran problemas, simplemente no las dibujes.
+  // if (this._skidG) rt.draw(this._skidG);
 }
 }

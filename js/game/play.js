@@ -485,44 +485,84 @@ this._currentS1 = null;
   }
 
 // ===== Exportar “foto” del mapa completo (PNG) =====
+// Objetivo: capturar worldW x worldH SIN tocar scroll/zoom/follow de la cámara del jugador.
 _dumpMapScreenshot(){
-  const cam = this.cameras.main;
-
-  // Abrir ventana DURANTE el gesto (iOS-safe)
+  // Abrir ventana DURANTE el gesto (iOS-safe). Si iOS bloquea popups,
+  // esto asegura que la pestaña ya exista antes del snapshot async.
   const win = window.open('', '_blank');
 
-  // Guardar estado actual (para restaurar)
-  const prevScrollX = cam.scrollX;
-  const prevScrollY = cam.scrollY;
-  const prevZoom = cam.zoom;
-  const wasFollowing = !!cam._follow;
+  // 1) Crear / reutilizar un RenderTexture del tamaño del mundo
+  const rt = this._getMapRenderTexture();
 
-  // Poner cámara viendo el origen del mundo (para capturar “vista mapa”)
-  cam.stopFollow();
-  cam.setZoom(1);
-  cam.setScroll(0, 0);
+  // 2) Renderizar el mundo entero dentro del RT (sin mover la cámara)
+  this._renderWorldInto(rt);
 
-  // Esperar 1 frame para que renderice en esa posición
-  this.time.delayedCall(0, () => {
+  // 3) Snapshot del RT -> dataURL (PNG)
+  // Nota: snapshot es async; por eso la ventana se abre antes.
+  rt.snapshot((image) => {
+    if (!win) return;
 
-    // Snapshot CORRECTO en Phaser: renderer.snapshot
-    this.game.renderer.snapshot((image) => {
-      if (win) {
-        win.document.open();
-        win.document.write(
-          `<title>Mapa</title>
-           <meta name="viewport" content="width=device-width, initial-scale=1" />
-           <img src="${image.src}" style="width:100%;height:auto;display:block"/>`
-        );
-        win.document.close();
-      }
-
-      // Restaurar cámara EXACTAMENTE como estaba
-      cam.setZoom(prevZoom);
-      cam.setScroll(prevScrollX, prevScrollY);
-      if (wasFollowing) cam.startFollow(this.car);
-    });
-
+    win.document.open();
+    win.document.write(`
+      <title>Mapa</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <style>
+        html,body{margin:0;padding:0;background:#0b0b0f;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+        header{position:sticky;top:0;background:rgba(11,11,15,.92);backdrop-filter:blur(8px);padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12)}
+        a{color:#8ae6ff;text-decoration:none;font-weight:700}
+        img{width:100%;height:auto;display:block}
+        .hint{opacity:.75;font-size:13px}
+      </style>
+      <header>
+        <div><strong>Mapa completo</strong> <span class="hint">(${this.worldW}×${this.worldH})</span></div>
+        <div class="hint">Consejo: mantén pulsado sobre la imagen para “Guardar en Fotos”.</div>
+        <div style="margin-top:6px"><a href="${image.src}" download="mapa.png">Descargar PNG</a></div>
+      </header>
+      <img src="${image.src}" alt="Mapa completo" />
+    `);
+    win.document.close();
   });
+}
+
+// RenderTexture “offscreen” para componer el mapa completo
+_getMapRenderTexture(){
+  // Reutiliza si ya existe y coincide el tamaño
+  if (this._mapRT && this._mapRT.width === this.worldW && this._mapRT.height === this.worldH) {
+    return this._mapRT;
+  }
+
+  // Si existía pero con otro tamaño, destruye limpio
+  if (this._mapRT) {
+    this._mapRT.destroy();
+    this._mapRT = null;
+  }
+
+  // Importante: origin(0) para que el (0,0) del mundo sea (0,0) del RT
+  const rt = this.add.renderTexture(0, 0, this.worldW, this.worldH).setOrigin(0);
+
+  // No queremos que “ensucie” la escena: lo ocultamos (igual se puede dibujar y snapshotear)
+  rt.setVisible(false);
+
+  this._mapRT = rt;
+  return rt;
+}
+
+// Dibuja los objetos del mundo dentro del RenderTexture, sin tocar la cámara principal
+_renderWorldInto(rt){
+  rt.clear();
+
+  // Dibujamos TODOS los children del display list, excepto el propio RT.
+  // Esto incluye: bg tileSprite, muros, líneas, coche, etc.
+  // Si luego quieres excluir el coche del mapa, lo filtramos aquí.
+  const list = this.children.list.filter(go => {
+    if (!go || go === rt) return false;
+    if (go.visible === false) return false;
+    if (go.alpha !== undefined && go.alpha <= 0) return false;
+    return true;
+  });
+
+  // RenderTexture.draw respeta posiciones en coordenadas de mundo (x,y) de cada GO.
+  // Como el RT está en (0,0) y tiene tamaño world, el mundo cae “a escala 1:1”.
+  rt.draw(list);
 }
 }

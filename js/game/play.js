@@ -276,8 +276,8 @@ if (btnClose) {
   btnClose.addEventListener('click', ()=> this._hideRaceEnd());
 }
    // DEBUG: fuerza mostrar el botón MAP al arrancar
-this._ensureExportButton();
-this._setExportVisible(true); 
+// this._ensureExportButton();
+// this._setExportVisible(true); 
     // Pequeño tutorial en consola
     // eslint-disable-next-line no-console
     console.log('Controles: izq/der, acelerar/frenar (táctil). Teclado: flechas.');

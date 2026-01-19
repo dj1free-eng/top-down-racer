@@ -45,13 +45,15 @@ this.finishSensor.body.setImmovable(true);
 const startX = trackCenterX;
 const startY = this.worldH/2 + 120; // un poco antes de la meta
 
-this.car = this.physics.add.sprite(startX, startY, 'car');
-this.car.setDamping(false);
-this.car.setDrag(0,0);
-this.car.setMaxVelocity(9999);
-this.car.setCollideWorldBounds(true);
-this.car.setBounce(0.2);
+this.car = this.matter.add.sprite(startX, startY, 'car');
 
+// Propiedades equivalentes / aproximadas en Matter
+this.car.setFrictionAir(0.05);   // “drag” en aire (ajustaremos luego)
+this.car.setFriction(0.0);       // fricción con superficies
+this.car.setBounce(0.2);         // rebote
+
+// Importante: rotación libre (top-down)
+this.car.setFixedRotation(false);
 // Mirando hacia arriba (−90°)
 this.car.rotation = -Math.PI / 2;
 

@@ -12,12 +12,13 @@ export default class PlayScene extends Phaser.Scene {
     // Mundo
     this.worldW = 2200;
     this.worldH = 1400;
-//    this.physics.world.setBounds(0,0,this.worldW,this.worldH);
+    // Matter: límites del mundo (con paredes)
+    this.matter.world.setBounds(0, 0, this.worldW, this.worldH);
 
 // Fondo asfalto (tileSprite)
 this.bg = this.add.tileSprite(0,0,this.worldW,this.worldH,'asphalt').setOrigin(0);
-    // Bordes (colliders invisibles) + un circuito simple tipo "óvalo" con paredes
-    this.walls = this.physics.add.staticGroup();
+    // Paredes (cuerpos estáticos Matter) + rectángulos de debug visual
+    this.walls = [];
 
 // Circuito (datos)
 this.track = track02;
@@ -35,10 +36,13 @@ this.finishLine = this.add.rectangle(trackCenterX, this.worldH/2, trackWidth, 18
 this.finishLine.setStrokeStyle(2, 0xffffff, 0.35);
 
 // Trigger de meta (sensor) — un poco más alto para detectar bien
-this.finishSensor = this.add.zone(trackCenterX, this.worldH/2, trackWidth + 40, 44);
-this.physics.world.enable(this.finishSensor);
-this.finishSensor.body.setAllowGravity(false);
-this.finishSensor.body.setImmovable(true);
+this.finishSensorBody = this.matter.add.rectangle(
+  trackCenterX,
+  this.worldH/2,
+  trackWidth + 40,
+  44,
+  { isStatic: true, isSensor: true, label: 'finishSensor' }
+);
     
     // Coche
     // Coche — posición de salida (antes de meta, mirando hacia ARRIBA)
@@ -46,19 +50,16 @@ const startX = trackCenterX;
 const startY = this.worldH/2 + 120; // un poco antes de la meta
 
 this.car = this.matter.add.sprite(startX, startY, 'car');
+// Ajuste de forma: misma huella que la textura runtime (34x18)
+this.car.setRectangle(34, 18);
+this.car.setBounce(0.2);
+this.car.setFriction(0.0);
+this.car.setFrictionAir(0.08);
 
-// Propiedades equivalentes / aproximadas en Matter
-this.car.setFrictionAir(0.05);   // “drag” en aire (ajustaremos luego)
-this.car.setFriction(0.0);       // fricción con superficies
-this.car.setBounce(0.2);         // rebote
-
-// Importante: rotación libre (top-down)
-this.car.setFixedRotation(false);
 // Mirando hacia arriba (−90°)
-this.car.rotation = -Math.PI / 2;
+this.car.setRotation(-Math.PI / 2);
 
-    // Colisiones
-  //  this.physics.add.collider(this.car, this.walls);
+    // Colisiones: Matter las gestiona directamente con cuerpos estáticos
 // Checkpoint (sensor) en la recta derecha (opuesta a meta)
 // PERPENDICULAR a la recta: línea horizontal cruzando el carril
 
@@ -77,34 +78,14 @@ const cpY = this.worldH / 2;
 this.checkpointLine = this.add.rectangle(cpX, cpY, trackWidth_R, 4, 0x000000, 0.60);
 this.checkpointLine.setDepth(10); // por encima de paredes para que no se “tape”
 
-// Sensor checkpoint (más alto para detectar bien, pero sin ser una franja visual)
-this.checkpointSensor = this.add.zone(cpX, cpY, trackWidth_R + 40, 44);
-this.physics.world.enable(this.checkpointSensor);
-this.checkpointSensor.body.setAllowGravity(false);
-this.checkpointSensor.body.setImmovable(true);
-
-// Overlap checkpoint: OK solo si se pasa en sentido correcto.
-// En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
-//this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
-/*
-    if (!this.raceStarted) return;
-//  const vy = this.car.body.velocity.y;
-  if (vy < 60) return;
-
-  // Sector 1: meta -> checkpoint
-  const now = this.time.now;
-
-  // Evitar doble registro si te quedas encima del sensor
-  if (!this._checkpointOK) {
-    this.lastCheckpointTime = now;
-
-    // Guardamos S1 temporalmente en la vuelta actual
-    this._currentS1 = now - this.lapStartTime;
-  }
-
-  this._checkpointOK = true;
-  */
-//});
+// Sensor checkpoint (Matter)
+this.checkpointSensorBody = this.matter.add.rectangle(
+  cpX,
+  cpY,
+  trackWidth_R + 40,
+  44,
+  { isStatic: true, isSensor: true, label: 'checkpointSensor' }
+);
 // Overlap meta
 this.lap = 0;              // aún no estamos en vuelta
 this.lapsTotal = 4;
@@ -122,72 +103,32 @@ this.lapStartTime = this.startTime;      // inicio de la vuelta actual
 this.lastCheckpointTime = null;          // tiempo absoluto del último checkpoint
 this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
 
+    // =========================
+    // SENSORES (Matter)
+    // - checkpointSensor: valida paso por la recta derecha
+    // - finishSensor: arranque + conteo de vueltas
+    // =========================
+    this.matter.world.on('collisionstart', (ev) => {
+      for (const pair of ev.pairs) {
+        const a = pair.bodyA;
+        const b = pair.bodyB;
 
- //   this.physics.add.overlap(this.car, this.finishSensor, ()=>{
-   // ===== ARRANQUE DE CARRERA (primer cruce de meta) =====
-/*
-    if (!this.raceStarted) {
-  const vy = this.car.body.velocity.y;
+        // Queremos detectar contactos entre el coche y los sensores
+        const isCarA = (a === this.car.body);
+        const isCarB = (b === this.car.body);
+        if (!isCarA && !isCarB) continue;
 
-  // Solo arranca si cruza en sentido correcto (hacia arriba)
-  if (vy < -60) {
-    this.raceStarted = true;
-    this.lap = 1;
-    this.startTime = this.time.now;
-    this.lapStartTime = this.startTime;
+        const other = isCarA ? b : a;
 
-    // Gate para que no cuente dos veces
-    this._canCountLap = false;
-    this.time.delayedCall(600, ()=>{ this._canCountLap = true; });
-  }
+        if (other === this.checkpointSensorBody) {
+          this._onCheckpointSensor();
+        }
 
-  // Este cruce NO cuenta como vuelta
-  return;
-} 
-      // Para evitar contar vueltas "vibrando" encima: gate por salida
-      if(!this._canCountLap) return;
-
-// Validación simple: solo cuenta si hay cruce "vertical" con cierta velocidad
-const vy = this.car.body.velocity.y;
-if (Math.abs(vy) < 60) return;
-      // Solo cuenta si antes pasaste por el checkpoint
-if(!this._checkpointOK) return;
-const now = this.time.now;
-
-// Sector 2: checkpoint -> meta
-const s2 = this.lastCheckpointTime ? (now - this.lastCheckpointTime) : 0;
-
-// Lap time: meta -> meta
-const lapTime = now - this.lapStartTime;
-
-// Sector 1 (si no existiera por algún motivo)
-const s1 = (typeof this._currentS1 === 'number') ? this._currentS1 : (lapTime - s2);
-
-// Guardar registro de la vuelta actual
-this.lapSplits.push({ lap: this.lap, s1, s2, lapTime });
-      if (this.lap < this.lapsTotal) {
-        this.lap += 1;
-        // Preparar siguiente vuelta
-this.lapStartTime = now;
-this.lastCheckpointTime = null;
-this._currentS1 = null;
-} else {
-  // FIN de carrera: congelar y mostrar resultado
-  this.finalTimeMs = (this.time.now - this.startTime);
-  this.raceFinished = true;
-  this._showRaceEnd(this.finalTimeMs);
-
-  // Parar coche
-  this.car.body.setVelocity(0,0);
-
-  return;
-}
-      // Consumimos el checkpoint: para la siguiente vuelta hay que volver a pasarlo
-this._checkpointOK = false;
-      this._canCountLap = false;
-      this.time.delayedCall(600, ()=>{ this._canCountLap = true; });
-*/
-  //  });
+        if (other === this.finishSensorBody) {
+          this._onFinishSensor();
+        }
+      }
+    });
 
     // Cámara
     this.cameras.main.setBounds(0,0,this.worldW,this.worldH);
@@ -341,7 +282,7 @@ input.brake = input.brake || kDown;
 setHud({lap:this.lap, lapsTotal:this.lapsTotal, timeMs});
 
     // Marcas de derrape (MVP visual) cuando hay velocidad + giro
-    const speed = this.car.body.velocity.length();
+    const speed = Math.hypot(this.car.body.velocity.x, this.car.body.velocity.y);
     const steering = (this.inputState.left ? 1 : 0) + (this.inputState.right ? 1 : 0);
     if (speed > 260 && steering) {
       this._emitSkid();
@@ -434,11 +375,113 @@ this._currentS1 = null;
     const tt = String(t).padStart(3,'0');
     return `${mm}:${ss}.${tt}`;
   }
+
+  // =========================
+  // Eventos de sensores (Matter)
+  // =========================
+  _onCheckpointSensor(){
+    if (!this.raceStarted) return;
+
+    // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
+    const vy = this.car.body.velocity.y;
+    if (vy < 60) return;
+
+    const now = this.time.now;
+
+    // Guardar checkpoint solo una vez por vuelta
+    if (!this._checkpointOK) {
+      this.lastCheckpointTime = now;
+      this._currentS1 = now - this.lapStartTime;
+    }
+
+    this._checkpointOK = true;
+  }
+
+  _onFinishSensor(){
+    // ===== ARRANQUE DE CARRERA (primer cruce de meta) =====
+    if (!this.raceStarted) {
+      const vy = this.car.body.velocity.y;
+
+      // Solo arranca si cruza en sentido correcto (hacia arriba)
+      if (vy < -60) {
+        this.raceStarted = true;
+        this.lap = 1;
+        this.startTime = this.time.now;
+        this.lapStartTime = this.startTime;
+
+        // Gate para que no cuente dos veces
+        this._canCountLap = false;
+        this.time.delayedCall(600, () => { this._canCountLap = true; });
+      }
+
+      // Este cruce NO cuenta como vuelta
+      return;
+    }
+
+    // Para evitar contar vueltas "vibrando" encima: gate por salida
+    if (!this._canCountLap) return;
+
+    // Validación simple: solo cuenta si hay cruce "vertical" con cierta velocidad
+    const vy = this.car.body.velocity.y;
+    if (Math.abs(vy) < 60) return;
+
+    // Solo cuenta si antes pasaste por el checkpoint
+    if (!this._checkpointOK) return;
+
+    const now = this.time.now;
+
+    // Sector 2: checkpoint -> meta
+    const s2 = this.lastCheckpointTime ? (now - this.lastCheckpointTime) : 0;
+
+    // Lap time: meta -> meta
+    const lapTime = now - this.lapStartTime;
+
+    // Sector 1 (si no existiera por algún motivo)
+    const s1 = (typeof this._currentS1 === 'number') ? this._currentS1 : (lapTime - s2);
+
+    // Guardar registro de la vuelta actual
+    this.lapSplits.push({ lap: this.lap, s1, s2, lapTime });
+
+    if (this.lap < this.lapsTotal) {
+      this.lap += 1;
+
+      // Preparar siguiente vuelta
+      this.lapStartTime = now;
+      this.lastCheckpointTime = null;
+      this._currentS1 = null;
+    } else {
+      // FIN de carrera: congelar y mostrar resultado
+      this.finalTimeMs = (this.time.now - this.startTime);
+      this.raceFinished = true;
+      this._showRaceEnd(this.finalTimeMs);
+
+      // Parar coche
+      this.car.setVelocity(0, 0);
+      this.car.setAngularVelocity(0);
+      return;
+    }
+
+    // Consumimos el checkpoint: para la siguiente vuelta hay que volver a pasarlo
+    this._checkpointOK = false;
+
+    this._canCountLap = false;
+    this.time.delayedCall(600, () => { this._canCountLap = true; });
+  }
   _addWallRect(x, y, w, h){
+    // Debug visual (rectángulo semitransparente)
     const r = this.add.rectangle(x + w/2, y + h/2, w, h, 0xff6a00, 0.12);
     r.setStrokeStyle(2, 0xff6a00, 0.22);
-    this.walls.add(r);
-    this.physics.add.existing(r, true);
+
+    // Cuerpo estático Matter (colisión real)
+    const body = this.matter.add.rectangle(
+      x + w / 2,
+      y + h / 2,
+      w,
+      h,
+      { isStatic: true, label: 'wall' }
+    );
+
+    this.walls.push({ r, body });
   }
 
   _emitSkid(){

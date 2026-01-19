@@ -1,6 +1,7 @@
 /**
- * Física arcade "derrape" simple.
- * Devuelve velocidad deseada en función de inputs.
+ * Física tipo "derrape" para Matter (Phaser Matter).
+ * Mantiene el mismo feeling que la versión Arcade: control directo de velocidad
+ * y reducción progresiva de la componente lateral.
  */
 export function updateCarPhysics(sprite, state, dt){
   // dt en segundos
@@ -41,7 +42,11 @@ export function updateCarPhysics(sprite, state, dt){
   const steer = (state.input.left ? -1 : 0) + (state.input.right ? 1 : 0);
   const speed01 = Phaser.Math.Clamp(Math.abs(targetForwardMag) / cfg.maxSpeed, 0, 1);
   const steerStrength = Phaser.Math.Linear(cfg.turnMin, cfg.turnMax, 1 - speed01);
-  sprite.rotation += steer * steerStrength * dt;
+  const newRot = sprite.rotation + (steer * steerStrength * dt);
+  sprite.setRotation(newRot);
+
+  // Importante en Matter: no queremos que la inercia angular “pelee” con el control.
+  if (typeof sprite.setAngularVelocity === 'function') sprite.setAngularVelocity(0);
 
   // 3) Derrape: reducimos lateral
   const lateralDamp = Phaser.Math.Clamp(1 - (cfg.lateralFriction * dt), 0, 1);
@@ -51,5 +56,12 @@ export function updateCarPhysics(sprite, state, dt){
   const newForward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation)).scale(targetForwardMag);
   const newV = newForward.add(newLateral);
 
-  sprite.body.setVelocity(newV.x, newV.y);
+  // En Matter, la API de Phaser es setVelocity (no body.setVelocity).
+  if (typeof sprite.setVelocity === 'function') {
+    sprite.setVelocity(newV.x, newV.y);
+  } else {
+    // fallback defensivo: algunos objetos exponen body.velocity directamente
+    sprite.body.velocity.x = newV.x;
+    sprite.body.velocity.y = newV.y;
+  }
 }

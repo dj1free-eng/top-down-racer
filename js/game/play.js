@@ -102,7 +102,7 @@ this.checkpointSensor.body.setImmovable(true);
   }
 
   this._checkpointOK = true;
-});
+//});
 // Overlap meta
 this.lap = 0;              // aún no estamos en vuelta
 this.lapsTotal = 4;

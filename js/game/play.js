@@ -738,15 +738,16 @@ const shareImg = async (e) => {
 btnShare.addEventListener('touchstart', shareImg, { passive:false });
 btnShare.addEventListener('pointerdown', shareImg, { passive:false });
 
-actions.appendChild(btnOpen);
-actions.appendChild(btnShare);
-actions.appendChild(close);
 const title = document.createElement('div');
 title.textContent = 'Mapa completo';
 title.style.fontWeight = '800';
+
+actions.appendChild(btnOpen);
+actions.appendChild(btnShare);
+actions.appendChild(close);
+
 bar.appendChild(title);
 bar.appendChild(actions);
-
 // Guardamos refs
 this._mapOverlayOpenBtnEl = btnOpen;
 this._mapOverlayShareBtnEl = btnShare;

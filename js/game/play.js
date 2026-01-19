@@ -110,7 +110,6 @@ this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
     // =========================
     this.matter.world.on('collisionstart', (ev) => {
   for (const pair of ev.pairs) {
-    // En Matter, a veces bodyA/bodyB son "partes". Normalizamos al root con parent.
     const a = pair.bodyA.parent || pair.bodyA;
     const b = pair.bodyB.parent || pair.bodyB;
 
@@ -122,10 +121,11 @@ this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
 
     const other = aIsCar ? b : a;
 
-    // Detectamos por label (más fiable que comparar objetos)
     if (other.label === 'checkpointSensor') {
       this._onCheckpointSensor();
-    } else if (other.label === 'finishSensor') {
+    }
+
+    if (other.label === 'finishSensor') {
       this._onFinishSensor();
     }
   }

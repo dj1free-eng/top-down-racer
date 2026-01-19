@@ -109,26 +109,27 @@ this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
     // - finishSensor: arranque + conteo de vueltas
     // =========================
     this.matter.world.on('collisionstart', (ev) => {
-      for (const pair of ev.pairs) {
-        const a = pair.bodyA;
-        const b = pair.bodyB;
+  for (const pair of ev.pairs) {
+    // En Matter, a veces bodyA/bodyB son "partes". Normalizamos al root con parent.
+    const a = pair.bodyA.parent || pair.bodyA;
+    const b = pair.bodyB.parent || pair.bodyB;
 
-        // Queremos detectar contactos entre el coche y los sensores
-        const isCarA = (a === this.car.body);
-        const isCarB = (b === this.car.body);
-        if (!isCarA && !isCarB) continue;
+    const carBody = this.car.body;
 
-        const other = isCarA ? b : a;
+    const aIsCar = (a === carBody);
+    const bIsCar = (b === carBody);
+    if (!aIsCar && !bIsCar) continue;
 
-        if (other === this.checkpointSensorBody) {
-          this._onCheckpointSensor();
-        }
+    const other = aIsCar ? b : a;
 
-        if (other === this.finishSensorBody) {
-          this._onFinishSensor();
-        }
-      }
-    });
+    // Detectamos por label (más fiable que comparar objetos)
+    if (other.label === 'checkpointSensor') {
+      this._onCheckpointSensor();
+    } else if (other.label === 'finishSensor') {
+      this._onFinishSensor();
+    }
+  }
+});
 
     // Cámara
     this.cameras.main.setBounds(0,0,this.worldW,this.worldH);

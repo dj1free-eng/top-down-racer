@@ -50,7 +50,10 @@ const startX = trackCenterX;
 const startY = this.worldH/2 + 120; // un poco antes de la meta
 
 this.car = this.matter.add.sprite(startX, startY, 'car');
-// Ajuste de forma: misma huella que la textura runtime (34x18)
+this.car.setFrictionAir(0.04);   // inercia: cuanto menor, más “planea”
+this.car.setFriction(0.02);      // fricción de contacto (baja)
+this.car.setBounce(0.0);         // sin rebote raro
+    // Ajuste de forma: misma huella que la textura runtime (34x18)
 this.car.setRectangle(34, 18);
 this.car.setBounce(0.2);
 this.car.setFriction(0.0);

@@ -12,7 +12,7 @@ export default class PlayScene extends Phaser.Scene {
     // Mundo
     this.worldW = 2200;
     this.worldH = 1400;
-    this.physics.world.setBounds(0,0,this.worldW,this.worldH);
+//    this.physics.world.setBounds(0,0,this.worldW,this.worldH);
 
 // Fondo asfalto (tileSprite)
 this.bg = this.add.tileSprite(0,0,this.worldW,this.worldH,'asphalt').setOrigin(0);

@@ -58,7 +58,7 @@ this.car.setFixedRotation(false);
 this.car.rotation = -Math.PI / 2;
 
     // Colisiones
-    this.physics.add.collider(this.car, this.walls);
+  //  this.physics.add.collider(this.car, this.walls);
 // Checkpoint (sensor) en la recta derecha (opuesta a meta)
 // PERPENDICULAR a la recta: línea horizontal cruzando el carril
 

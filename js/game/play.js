@@ -86,7 +86,8 @@ this.checkpointSensor.body.setImmovable(true);
 // Overlap checkpoint: OK solo si se pasa en sentido correcto.
 // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
 //this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
- if (!this.raceStarted) return;
+/*
+    if (!this.raceStarted) return;
 //  const vy = this.car.body.velocity.y;
   if (vy < 60) return;
 
@@ -102,6 +103,7 @@ this.checkpointSensor.body.setImmovable(true);
   }
 
   this._checkpointOK = true;
+  */
 //});
 // Overlap meta
 this.lap = 0;              // aún no estamos en vuelta

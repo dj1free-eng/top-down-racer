@@ -1,6 +1,6 @@
 export const track02 = {
   id: 'track_02_mixed_wide_clockwise',
-  name: 'Mixed Wide (Clockwise)',
+  name: 'Kart Flow (Clockwise)',
   lapsTotal: 4,
 
   world: { w: 2200, h: 1400 },
@@ -29,40 +29,37 @@ export const track02 = {
   // Salida: antes de meta y mirando hacia arriba
   start: { offsetY: +120, rotation: -Math.PI/2 },
 
-// =========================
-// CIRCUITO PRO – FLOW EDITION
-// =========================
+  // Obstáculos: aquí es donde “dibujamos” el circuito a medida
+  // Cada obstáculo es [x, y, w, h]
+  // En este track NO usamos “bloques” rectos como obstáculos.
+  // La dificultad viene de “curbs” inclinados que guían la trazada.
+  obstacles: [],
 
-obstacles: [
-  // Islas suaves (NUNCA frontales)
-  // Solo para dividir trazadas, no para bloquear
-  [1040, 520, 100, 100],
-  [1640, 780, 100, 100],
-],
+  // Curbs inclinados (no cierran el carril; siempre dejan salida).
+  // slanted item: [x1, y1, x2, y2, thickness, step]
+  slanted: [
+    // =========================
+    // ZONA SUPERIOR — Chicane en V (tipo kart)
+    // (dos diagonales que se encuentran, dejando hueco por arriba y por abajo)
+    // =========================
+    [900, 130, 1100, 250, 20, 6],
+    [1300, 130, 1100, 250, 20, 6],
 
-// Diagonales = guías de trayectoria
-// Formato: [x1, y1, x2, y2, thickness, step]
-slanted: [
-  // ===== ZONA SUPERIOR – S RÁPIDA =====
-  // Te saca de la recta y te recoloca
-  [620, 120, 1180, 260, 18, 8],
-  [1180, 260, 1700, 140, 18, 8],
+    // =========================
+    // LATERAL DERECHO — “S” abierta
+    // (primero empuja hacia el interior; luego te devuelve hacia el exterior)
+    // =========================
+    [2060, 420, 1880, 560, 20, 6],
+    [1880, 760, 2060, 900, 20, 6],
 
-  // ===== PRE-CURVA DERECHA – PREPARACIÓN =====
-  // Obliga a abrir gas con control
-  [1820, 220, 2020, 420, 18, 8],
+    // =========================
+    // INFERIOR — Diagonal larga de ritmo
+    // =========================
+    [700, 1160, 1650, 1285, 20, 6],
 
-  // ===== LATERAL DERECHO – S ABIERTA =====
-  // Flujo continuo, nunca encierra
-  [2040, 520, 1860, 720, 18, 8],
-  [1860, 860, 2060, 1040, 18, 8],
-
-  // ===== ZONA INFERIOR – DIAGONAL DE VELOCIDAD =====
-  // Mantiene ritmo, no castiga
-  [700, 1180, 1700, 1320, 18, 8],
-
-  // ===== ENTRADA A META – AJUSTE FINO =====
-  // Te coloca bonito para la recta
-  [520, 820, 760, 640, 16, 8],
-]
+    // =========================
+    // IZQUIERDA — Ajuste suave para que no sea “túnel”
+    // =========================
+    [420, 640, 220, 780, 18, 6],
+  ]
 };

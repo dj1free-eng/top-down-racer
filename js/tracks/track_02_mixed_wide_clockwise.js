@@ -1,7 +1,7 @@
 // Track 02 — Kart Flow (clockwise)
 // Pista esculpida por muros, sin obstáculos internos
 
-export default {
+export const track02 = {
   id: 'track02',
   name: 'Kart Flow',
 

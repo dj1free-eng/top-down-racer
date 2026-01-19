@@ -27,8 +27,22 @@ const v = new Phaser.Math.Vector2(
 
   // Tracción (acelera)
   let targetForwardMag = vForwardMag;
-  if (accel) targetForwardMag += cfg.accel * dt;
-  if (brake) targetForwardMag -= cfg.brake * dt;
+
+if (accel) {
+  targetForwardMag += cfg.accel * dt;
+}
+
+if (brake) {
+  // Si vas hacia delante, el freno SOLO frena (no permite cruzar a negativa de golpe)
+  if (vForwardMag > 5) {
+    targetForwardMag -= cfg.brake * dt;
+    if (targetForwardMag < 0) targetForwardMag = 0; // evita que el freno sea "turbo-reversa"
+  } else {
+    // Si ya estás casi parado (o ya ibas hacia atrás), entonces sí: reversa suave
+    const revA = (typeof cfg.reverseAccel === 'number') ? cfg.reverseAccel : cfg.accel;
+    targetForwardMag -= revA * dt;
+  }
+}
 
   // Drag
   if (!accel && !brake) {

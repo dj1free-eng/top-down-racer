@@ -35,11 +35,11 @@ const config = {
     height: window.innerHeight
   },
   physics: {
-    default: 'arcade',
-    arcade: {
-      debug: false
-    }
-  },
+  default: 'matter',
+  matter: {
+    debug: false
+  }
+},
   scene: [BootScene, PreloadScene, PlayScene]
 };
 

@@ -6,7 +6,7 @@
 export function updateCarPhysics(sprite, state, dt){
   // dt en segundos
   const cfg = state.cfg;
-const MATTER_VEL_SCALE = 0.30; // Sube/baja este número para afinar
+const MATTER_VEL_SCALE = 0.40; // Sube/baja este número para afinar
   // 1) Aceleración / freno (en eje forward)
   const forward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation));
 

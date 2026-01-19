@@ -385,7 +385,7 @@ this._currentS1 = null;
 
     // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
     const vy = this.car.body.velocity.y;
-    if (vy < 60) return;
+    if (vy < 20) return;
 
     const now = this.time.now;
 
@@ -404,7 +404,7 @@ this._currentS1 = null;
       const vy = this.car.body.velocity.y;
 
       // Solo arranca si cruza en sentido correcto (hacia arriba)
-      if (vy < -60) {
+      if (vy < -20) {
         this.raceStarted = true;
         this.lap = 1;
         this.startTime = this.time.now;
@@ -424,7 +424,7 @@ this._currentS1 = null;
 
     // Validación simple: solo cuenta si hay cruce "vertical" con cierta velocidad
     const vy = this.car.body.velocity.y;
-    if (Math.abs(vy) < 60) return;
+    if (Math.abs(vy) < 20) return;
 
     // Solo cuenta si antes pasaste por el checkpoint
     if (!this._checkpointOK) return;

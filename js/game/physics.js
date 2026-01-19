@@ -10,11 +10,11 @@ const MATTER_VEL_SCALE = 0.45;      // tu dial (ya lo estabas tocando)
 const RESPONSE = 8;                // cuanto mayor, más “arcade”; menor, más inercia
   // 1) Aceleración / freno (en eje forward)
   const forward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation));
-
-  // Componentes de velocidad
+// Matter guarda velocity "por paso". La pasamos a px/seg usando dt real.
+const invDt = dt > 0 ? (1 / dt) : 60; // fallback seguro
 const v = new Phaser.Math.Vector2(
-  sprite.body.velocity.x,
-  sprite.body.velocity.y
+  sprite.body.velocity.x * invDt,
+  sprite.body.velocity.y * invDt
 );
 
   // Proyección
@@ -71,9 +71,13 @@ const t = 1 - Math.exp(-RESPONSE * dt);
 const blended = v.clone().lerp(newV, t);
 
 if (typeof sprite.setVelocity === 'function') {
-  sprite.setVelocity(blended.x * MATTER_VEL_SCALE, blended.y * MATTER_VEL_SCALE);
+// blended está en px/seg → Matter necesita por paso → multiplicamos por dt
+sprite.setVelocity(
+  blended.x * MATTER_VEL_SCALE * dt,
+  blended.y * MATTER_VEL_SCALE * dt
+);
 } else {
-  sprite.body.velocity.x = blended.x * MATTER_VEL_SCALE;
-  sprite.body.velocity.y = blended.y * MATTER_VEL_SCALE;
+  sprite.body.velocity.x = blended.x * MATTER_VEL_SCALE * dt;
+sprite.body.velocity.y = blended.y * MATTER_VEL_SCALE * dt;
 }
 }

@@ -145,6 +145,7 @@ this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
         maxSpeed: 520,
         maxReverse: 220,
         accel: 720,
+        reverseAccel: 520,
         brake: 980,
         coast: 420,
         lateralFriction: 4.8,

@@ -11,7 +11,12 @@ export function updateCarPhysics(sprite, state, dt){
   const forward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation));
 
   // Componentes de velocidad
-  const v = new Phaser.Math.Vector2(sprite.body.velocity.x, sprite.body.velocity.y);
+// Matter usa velocity "por tick" (aprox 60Hz). Convertimos a px/seg para que tu cfg siga teniendo sentido.
+const STEP = 1 / 60;
+const v = new Phaser.Math.Vector2(
+  sprite.body.velocity.x / STEP,
+  sprite.body.velocity.y / STEP
+);
 
   // Proyección
   const vForwardMag = v.dot(forward);

@@ -63,7 +63,8 @@ const v = new Phaser.Math.Vector2(
 
   // En Matter, la API de Phaser es setVelocity (no body.setVelocity).
   if (typeof sprite.setVelocity === 'function') {
-    sprite.setVelocity(newV.x, newV.y);
+// Convertimos de px/seg a velocity por tick para Matter
+sprite.setVelocity(newV.x * STEP, newV.y * STEP);
   } else {
     // fallback defensivo: algunos objetos exponen body.velocity directamente
     sprite.body.velocity.x = newV.x;

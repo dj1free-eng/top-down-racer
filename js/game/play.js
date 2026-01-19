@@ -87,7 +87,7 @@ this.checkpointSensor.body.setImmovable(true);
 // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
 //this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
  if (!this.raceStarted) return;
-  const vy = this.car.body.velocity.y;
+//  const vy = this.car.body.velocity.y;
   if (vy < 60) return;
 
   // Sector 1: meta -> checkpoint

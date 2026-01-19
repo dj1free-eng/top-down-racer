@@ -125,7 +125,8 @@ this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
 
  //   this.physics.add.overlap(this.car, this.finishSensor, ()=>{
    // ===== ARRANQUE DE CARRERA (primer cruce de meta) =====
-if (!this.raceStarted) {
+/*
+    if (!this.raceStarted) {
   const vy = this.car.body.velocity.y;
 
   // Solo arranca si cruza en sentido correcto (hacia arriba)
@@ -185,7 +186,8 @@ this._currentS1 = null;
 this._checkpointOK = false;
       this._canCountLap = false;
       this.time.delayedCall(600, ()=>{ this._canCountLap = true; });
-    });
+*/
+  //  });
 
     // Cámara
     this.cameras.main.setBounds(0,0,this.worldW,this.worldH);

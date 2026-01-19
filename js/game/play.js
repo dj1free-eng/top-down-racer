@@ -85,7 +85,7 @@ this.checkpointSensor.body.setImmovable(true);
 
 // Overlap checkpoint: OK solo si se pasa en sentido correcto.
 // En sentido horario, en la recta derecha vas HACIA ABAJO => vy positiva
-this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
+//this.physics.add.overlap(this.car, this.checkpointSensor, ()=>{
  if (!this.raceStarted) return;
   const vy = this.car.body.velocity.y;
   if (vy < 60) return;
@@ -121,7 +121,7 @@ this.lastCheckpointTime = null;          // tiempo absoluto del último checkpoi
 this.lapSplits = [];                     // array de {lap, s1, s2, lapTime}
 
 
-    this.physics.add.overlap(this.car, this.finishSensor, ()=>{
+ //   this.physics.add.overlap(this.car, this.finishSensor, ()=>{
    // ===== ARRANQUE DE CARRERA (primer cruce de meta) =====
 if (!this.raceStarted) {
   const vy = this.car.body.velocity.y;

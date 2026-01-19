@@ -400,6 +400,12 @@ this._currentS1 = null;
   }
 
   _onFinishSensor(){
+   console.log('[FINISH] triggered', {
+  raceStarted: this.raceStarted,
+  lap: this.lap,
+  startTime: this.startTime,
+  v: this.car?.body?.velocity
+}); 
     // ===== ARRANQUE DE CARRERA (primer cruce de meta) =====
     if (!this.raceStarted) {
       const vy = this.car.body.velocity.y;

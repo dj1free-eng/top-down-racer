@@ -6,7 +6,8 @@
 export function updateCarPhysics(sprite, state, dt){
   // dt en segundos
   const cfg = state.cfg;
-const MATTER_VEL_SCALE = 0.40; // Sube/baja este número para afinar
+const MATTER_VEL_SCALE = 0.45;      // tu dial (ya lo estabas tocando)
+const RESPONSE = 8;                // cuanto mayor, más “arcade”; menor, más inercia
   // 1) Aceleración / freno (en eje forward)
   const forward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation));
 
@@ -44,14 +45,6 @@ if (brake) {
   }
 }
 
-  // Drag
-  if (!accel && !brake) {
-    const sign = Math.sign(targetForwardMag);
-    const dec = cfg.coast * dt;
-    const mag = Math.max(0, Math.abs(targetForwardMag) - dec);
-    targetForwardMag = mag * sign;
-  }
-
   // Límite velocidad
   targetForwardMag = Phaser.Math.Clamp(targetForwardMag, -cfg.maxReverse, cfg.maxSpeed);
 
@@ -73,12 +66,14 @@ if (brake) {
   const newForward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation)).scale(targetForwardMag);
   const newV = newForward.add(newLateral);
 
-  // En Matter, la API de Phaser es setVelocity (no body.setVelocity).
-  if (typeof sprite.setVelocity === 'function') {
-sprite.setVelocity(newV.x * MATTER_VEL_SCALE, newV.y * MATTER_VEL_SCALE);
-  } else {
-    // fallback defensivo: algunos objetos exponen body.velocity directamente
-    sprite.body.velocity.x = newV.x * MATTER_VEL_SCALE;
-sprite.body.velocity.y = newV.y * MATTER_VEL_SCALE;
-  }
+// Mezcla suave: mantiene inercia y permite derrape real
+const t = 1 - Math.exp(-RESPONSE * dt);
+const blended = v.clone().lerp(newV, t);
+
+if (typeof sprite.setVelocity === 'function') {
+  sprite.setVelocity(blended.x * MATTER_VEL_SCALE, blended.y * MATTER_VEL_SCALE);
+} else {
+  sprite.body.velocity.x = blended.x * MATTER_VEL_SCALE;
+  sprite.body.velocity.y = blended.y * MATTER_VEL_SCALE;
+}
 }

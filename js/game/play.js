@@ -787,13 +787,23 @@ _showMapOverlayLoading(){
   this._mapOverlayMsgEl.textContent = 'Generando mapa…';
   this._mapOverlayImgEl.style.display = 'none';
   this._mapOverlayImgEl.src = '';
+
+  this._mapLastDataUrl = null;
+  if (this._mapOverlayOpenBtnEl) this._mapOverlayOpenBtnEl.disabled = true;
+  if (this._mapOverlayShareBtnEl) this._mapOverlayShareBtnEl.disabled = true;
 }
 
 _showMapOverlayImage(dataUrl){
   this._mapOverlayEl.style.display = 'flex';
-  this._mapOverlayMsgEl.textContent = `Tamaño: ${this.worldW}×${this.worldH}. Mantén pulsado la imagen para guardar.`;
+  this._mapOverlayMsgEl.textContent = `Tamaño: ${this.worldW}×${this.worldH}. Usa “Abrir” o “Compartir” para guardarlo.`;
   this._mapOverlayImgEl.src = dataUrl;
   this._mapOverlayImgEl.style.display = 'block';
+
+  // Guardar para botones
+  this._mapLastDataUrl = dataUrl;
+
+  if (this._mapOverlayOpenBtnEl) this._mapOverlayOpenBtnEl.disabled = false;
+  if (this._mapOverlayShareBtnEl) this._mapOverlayShareBtnEl.disabled = false;
 }
 
 _showMapOverlayError(text){

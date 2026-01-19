@@ -6,16 +6,14 @@
 export function updateCarPhysics(sprite, state, dt){
   // dt en segundos
   const cfg = state.cfg;
-
+const MATTER_VEL_SCALE = 0.30; // Sube/baja este número para afinar
   // 1) Aceleración / freno (en eje forward)
   const forward = new Phaser.Math.Vector2(Math.cos(sprite.rotation), Math.sin(sprite.rotation));
 
   // Componentes de velocidad
-// Matter usa velocity "por tick" (aprox 60Hz). Convertimos a px/seg para que tu cfg siga teniendo sentido.
-const STEP = 1 / 60;
 const v = new Phaser.Math.Vector2(
-  sprite.body.velocity.x / STEP,
-  sprite.body.velocity.y / STEP
+  sprite.body.velocity.x,
+  sprite.body.velocity.y
 );
 
   // Proyección
@@ -63,11 +61,10 @@ const v = new Phaser.Math.Vector2(
 
   // En Matter, la API de Phaser es setVelocity (no body.setVelocity).
   if (typeof sprite.setVelocity === 'function') {
-// Convertimos de px/seg a velocity por tick para Matter
-sprite.setVelocity(newV.x * STEP, newV.y * STEP);
+sprite.setVelocity(newV.x * MATTER_VEL_SCALE, newV.y * MATTER_VEL_SCALE);
   } else {
     // fallback defensivo: algunos objetos exponen body.velocity directamente
-    sprite.body.velocity.x = newV.x;
-    sprite.body.velocity.y = newV.y;
+    sprite.body.velocity.x = newV.x * MATTER_VEL_SCALE;
+sprite.body.velocity.y = newV.y * MATTER_VEL_SCALE;
   }
 }

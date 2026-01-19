@@ -35,11 +35,12 @@ const config = {
     height: window.innerHeight
   },
   physics: {
-  default: 'matter',
-  matter: {
-    debug: false
-  }
-},
+    default: 'matter',
+    matter: {
+      gravity: { x: 0, y: 0 },
+      debug: false
+    }
+  },
   scene: [BootScene, PreloadScene, PlayScene]
 };
 

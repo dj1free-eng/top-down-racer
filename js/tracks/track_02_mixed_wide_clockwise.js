@@ -1,65 +1,70 @@
-export const track02 = {
-  id: 'track_02_mixed_wide_clockwise',
-  name: 'Kart Flow (Clockwise)',
-  lapsTotal: 4,
+// Track 02 — Kart Flow (clockwise)
+// Pista esculpida por muros, sin obstáculos internos
 
-  world: { w: 2200, h: 1400 },
+export default {
+  id: 'track02',
+  name: 'Kart Flow',
 
-  // Muros base: mismo anillo que el Track01 (ancho)
-  walls: [
-    // Exterior
-    [80, 80, 2200-160, 24],
-    [80, 1400-104, 2200-160, 24],
-    [80, 80, 24, 1400-160],
-    [2200-104, 80, 24, 1400-160],
-
-    // Interior
-    [460, 360, 2200-920, 24],
-    [460, 1400-384, 2200-920, 24],
-    [460, 360, 24, 1400-744],
-    [2200-484, 360, 24, 1400-744],
+  // =========================
+  // MURO EXTERIOR (rectángulo limpio)
+  // =========================
+  outerWalls: [
+    // top
+    [0, 0, 2304, 20],
+    // bottom
+    [0, 1296, 2304, 20],
+    // left
+    [0, 0, 20, 1296],
+    // right
+    [2284, 0, 20, 1296],
   ],
 
-  // Meta en recta izquierda (mantenemos fijo)
-  finish: { y: 1400/2 },
+  // =========================
+  // MURO INTERIOR (isla central “orgánica”)
+  // Hecho con segmentos cortos para simular curvas
+  // =========================
+  innerWalls: [
+    // ---- tramo superior (ligera V invertida) ----
+    [420, 220, 300, 20],
+    [740, 200, 300, 20],
+    [1060, 220, 300, 20],
 
-  // Checkpoint recta derecha (fijo por ahora para evitar líos)
-  checkpoint: { y: 1400/2 },
+    // ---- curva superior derecha ----
+    [1360, 260, 20, 180],
+    [1340, 440, 40, 160],
+    [1300, 600, 80, 140],
 
-  // Salida: antes de meta y mirando hacia arriba
-  start: { offsetY: +120, rotation: -Math.PI/2 },
+    // ---- lateral derecho (S suave) ----
+    [1240, 760, 120, 120],
+    [1280, 900, 80, 140],
+    [1320, 1060, 40, 160],
 
-  // Obstáculos: aquí es donde “dibujamos” el circuito a medida
-  // Cada obstáculo es [x, y, w, h]
-  // En este track NO usamos “bloques” rectos como obstáculos.
-  // La dificultad viene de “curbs” inclinados que guían la trazada.
-  obstacles: [],
+    // ---- curva inferior derecha ----
+    [1060, 1140, 300, 20],
+    [740, 1160, 300, 20],
 
-  // Curbs inclinados (no cierran el carril; siempre dejan salida).
-  // slanted item: [x1, y1, x2, y2, thickness, step]
-  slanted: [
-    // =========================
-    // ZONA SUPERIOR — Chicane en V (tipo kart)
-    // (dos diagonales que se encuentran, dejando hueco por arriba y por abajo)
-    // =========================
-    [900, 130, 1100, 250, 20, 6],
-    [1300, 130, 1100, 250, 20, 6],
+    // ---- tramo inferior ----
+    [420, 1140, 300, 20],
 
-    // =========================
-    // LATERAL DERECHO — “S” abierta
-    // (primero empuja hacia el interior; luego te devuelve hacia el exterior)
-    // =========================
-    [2060, 420, 1880, 560, 20, 6],
-    [1880, 760, 2060, 900, 20, 6],
+    // ---- curva inferior izquierda ----
+    [300, 980, 20, 160],
+    [320, 820, 40, 140],
+    [360, 660, 80, 140],
 
-    // =========================
-    // INFERIOR — Diagonal larga de ritmo
-    // =========================
-    [700, 1160, 1650, 1285, 20, 6],
+    // ---- lateral izquierdo (entrada a meta limpia) ----
+    [420, 520, 120, 120],
+  ],
 
-    // =========================
-    // IZQUIERDA — Ajuste suave para que no sea “túnel”
-    // =========================
-    [420, 640, 220, 780, 18, 6],
-  ]
+  // =========================
+  // Línea de salida / meta
+  // =========================
+  startLine: {
+    x: 120,
+    y: 620,
+    width: 160,
+    height: 6,
+    angle: 0,
+  },
+
+  direction: 'clockwise',
 };
